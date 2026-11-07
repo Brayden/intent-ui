@@ -1,0 +1,253 @@
+{
+  "name": "change-05-template-and-alias",
+  "level": "L2",
+  "rule": "§10.2 templates and aliases change through ops like everything else",
+  "kind": "change",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {},
+      "sources": {}
+    },
+    "templates": [
+      {
+        "id": "tpl-old",
+        "intentId": "person-card",
+        "prompt": "Show this person's details",
+        "summary": "Person details",
+        "itemFields": [
+          "name"
+        ],
+        "tools": [],
+        "root": "d",
+        "nodes": {
+          "d": {
+            "type": "Dialog",
+            "props": {
+              "title": {
+                "path": "$item/name"
+              }
+            },
+            "children": [
+              "k"
+            ]
+          },
+          "k": {
+            "type": "Text",
+            "props": {
+              "text": {
+                "path": "$item/title"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "tpl-person",
+        "intentId": "person-details",
+        "prompt": "Show this person's details",
+        "summary": "Person details",
+        "itemFields": [
+          "name",
+          "title"
+        ],
+        "tools": [],
+        "root": "d",
+        "nodes": {
+          "d": {
+            "type": "Dialog",
+            "props": {
+              "title": {
+                "path": "$item/name"
+              }
+            },
+            "children": [
+              "k"
+            ]
+          },
+          "k": {
+            "type": "Text",
+            "props": {
+              "text": {
+                "path": "$item/title"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "aliases": {
+      "[\"person-details\",\"Show this person's details\"]": "tpl-person"
+    }
+  },
+  "change": {
+    "baseVersion": 1,
+    "summary": "Remember person details",
+    "ops": [
+      {
+        "op": "putTemplate",
+        "template": {
+          "id": "tpl-new",
+          "intentId": "person-details",
+          "prompt": "Show this person's details",
+          "summary": "Person details",
+          "itemFields": [
+            "name",
+            "title"
+          ],
+          "tools": [],
+          "root": "d",
+          "nodes": {
+            "d": {
+              "type": "Dialog",
+              "props": {
+                "title": {
+                  "path": "$item/name"
+                }
+              },
+              "children": [
+                "k"
+              ]
+            },
+            "k": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "$item/title"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "op": "setAlias",
+        "intent": {
+          "id": "person-details",
+          "prompt": "Show this person's details"
+        },
+        "template": "tpl-new"
+      },
+      {
+        "op": "removeTemplate",
+        "id": "tpl-old"
+      }
+    ]
+  },
+  "expect": {
+    "accepted": true,
+    "document": {
+      "iap": "0.1",
+      "version": 2,
+      "spec": {
+        "specVersion": 0,
+        "catalogVersion": "kumo@2.17",
+        "pages": {
+          "home": {
+            "id": "home",
+            "title": "Home",
+            "layout": {
+              "root": "main",
+              "nodes": {
+                "main": {
+                  "kind": "slot"
+                }
+              }
+            },
+            "params": {}
+          }
+        },
+        "blocks": {},
+        "sources": {}
+      },
+      "templates": [
+        {
+          "root": "d",
+          "nodes": {
+            "d": {
+              "type": "Dialog",
+              "props": {
+                "title": {
+                  "path": "$item/name"
+                }
+              },
+              "children": [
+                "k"
+              ]
+            },
+            "k": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "$item/title"
+                }
+              }
+            }
+          },
+          "id": "tpl-person",
+          "intentId": "person-details",
+          "prompt": "Show this person's details",
+          "summary": "Person details",
+          "itemFields": [
+            "name",
+            "title"
+          ],
+          "tools": []
+        },
+        {
+          "root": "d",
+          "nodes": {
+            "d": {
+              "type": "Dialog",
+              "props": {
+                "title": {
+                  "path": "$item/name"
+                }
+              },
+              "children": [
+                "k"
+              ]
+            },
+            "k": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "$item/title"
+                }
+              }
+            }
+          },
+          "id": "tpl-new",
+          "intentId": "person-details",
+          "prompt": "Show this person's details",
+          "summary": "Person details",
+          "itemFields": [
+            "name",
+            "title"
+          ],
+          "tools": []
+        }
+      ],
+      "aliases": {
+        "[\"person-details\",\"Show this person's details\"]": "tpl-new"
+      }
+    }
+  }
+}

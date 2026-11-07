@@ -1,0 +1,81 @@
+{
+  "name": "render-05-deterministic-clock",
+  "level": "L1",
+  "rule": "§5.6 $now() and $millis() return the load's asOf in every expression",
+  "kind": "render",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {
+        "c": {
+          "id": "c",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "inputs": {
+            "items": "items"
+          },
+          "view": {
+            "expr": "{ \"now\": $now(), \"ms\": $millis(), \"ageDays\": $floor(($millis() - $toMillis($items[0].created)) / 86400000), \"day\": $now(\"[Y0001]-[M01]-[D01]\") }",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/now"
+                }
+              }
+            }
+          }
+        }
+      },
+      "sources": {
+        "items": {
+          "kind": "local",
+          "id": "items",
+          "data": [
+            {
+              "id": "x",
+              "created": "2026-11-01T12:00:00Z"
+            }
+          ]
+        }
+      }
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "asOf": "2026-11-07T12:00:00Z",
+  "expect": {
+    "views": {
+      "c": {
+        "data": {
+          "now": "2026-11-07T12:00:00.000Z",
+          "ms": 1794052800000,
+          "ageDays": 6,
+          "day": "2026-11-07"
+        }
+      }
+    }
+  }
+}

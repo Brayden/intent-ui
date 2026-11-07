@@ -1,0 +1,659 @@
+{
+  "$schema": "https://intent-ui.dev/spec/0.1/catalog.schema.json",
+  "id": "kumo",
+  "version": "2.17",
+  "components": {
+    "ActionMenu": {
+      "description": "A '⋯' menu button. Children must be MenuItem nodes, each with an action (often a deferred `intent`).",
+      "props": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ]
+      },
+      "children": [
+        "MenuItem"
+      ]
+    },
+    "Badge": {
+      "description": "Small status label. `variant`: neutral, success, warning, error, info, outline.",
+      "props": {
+        "type": "object",
+        "properties": {
+          "text": {},
+          "variant": {
+            "default": "neutral",
+            "type": "string",
+            "enum": [
+              "neutral",
+              "success",
+              "warning",
+              "error",
+              "info",
+              "outline"
+            ]
+          }
+        }
+      },
+      "children": "none"
+    },
+    "BlockSources": {
+      "description": "This block's data-source badges, identical to the ones in the block header. Place them anywhere; hide the header ones with a frame patch (sources: false).",
+      "props": {
+        "type": "object",
+        "properties": {}
+      },
+      "children": "none"
+    },
+    "BlockUpdated": {
+      "description": "This block's freshness label (\"Updated 3 minutes ago\", or a refreshing indicator while data reloads), identical to the one in the block header. Place it anywhere, e.g. in the toolbar; hide the header one with a frame patch (freshness: false).",
+      "props": {
+        "type": "object",
+        "properties": {
+          "prefix": {
+            "default": "Updated ",
+            "type": "string"
+          },
+          "size": {
+            "default": "xs",
+            "type": "string",
+            "enum": [
+              "xs",
+              "sm"
+            ]
+          }
+        }
+      },
+      "children": "none"
+    },
+    "Button": {
+      "description": "A button that fires the node's `action` (e.g. `refresh`, `close`, `intent`). `variant`: primary, secondary, ghost, outline.",
+      "props": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "variant": {
+            "default": "secondary",
+            "type": "string",
+            "enum": [
+              "primary",
+              "secondary",
+              "ghost",
+              "outline"
+            ]
+          },
+          "size": {
+            "default": "base",
+            "type": "string",
+            "enum": [
+              "sm",
+              "base"
+            ]
+          }
+        },
+        "required": [
+          "label"
+        ]
+      },
+      "children": "none",
+      "action": "fired on click."
+    },
+    "Checkbox": {
+      "description": "A checkbox bound two-way to UI state at `bind` (/ui/...). Pair with `visible` conditions on other nodes to show/hide them. Use `invert` for 'show X' checkboxes bound to a 'hidden' flag. With `value`, it toggles that value's membership in a list at `bind` (per-item checkboxes).",
+      "props": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "bind": {
+            "type": "string",
+            "pattern": "^\\/ui\\/"
+          },
+          "invert": {
+            "default": false,
+            "type": "boolean"
+          },
+          "value": {}
+        },
+        "required": [
+          "label",
+          "bind"
+        ]
+      },
+      "children": "none"
+    },
+    "DataColumn": {
+      "description": "A DataTable column. Show `field` (optionally with a `subField` second line) with a `format`, or add child nodes as a cell template using `$item/...` paths.",
+      "props": {
+        "type": "object",
+        "properties": {
+          "header": {
+            "default": "",
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "subField": {
+            "type": "string"
+          },
+          "format": {
+            "default": "text",
+            "type": "string",
+            "enum": [
+              "text",
+              "number",
+              "compact",
+              "date",
+              "relative",
+              "count"
+            ]
+          },
+          "linkField": {
+            "type": "string"
+          },
+          "align": {
+            "default": "left",
+            "type": "string",
+            "enum": [
+              "left",
+              "right"
+            ]
+          },
+          "requires": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "children": "any",
+      "parent": "DataTable"
+    },
+    "DataTable": {
+      "description": "Table over an array in the view model. Children must be DataColumn nodes. Bind `rows` with a path and set `rowKey` to the item key. For selectable rows set `selectionBind` (e.g. \"/ui/selected\"); the selected keys are then available at that path (count them with Text format `count`, show bulk actions with `visible: { path }`, pass them to tool args).",
+      "props": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rowKey": {
+            "type": "string"
+          },
+          "emptyTitle": {
+            "default": "Nothing here yet",
+            "type": "string"
+          },
+          "emptyDescription": {
+            "type": "string"
+          },
+          "requires": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "selectionBind": {
+            "type": "string",
+            "pattern": "^\\/ui\\/"
+          }
+        },
+        "required": [
+          "rowKey"
+        ]
+      },
+      "children": [
+        "DataColumn"
+      ],
+      "action": "fired when a row is clicked (or focused and Enter pressed): the whole row is the click target, with `$item` = that row. Use it for clickable rows, e.g. { \"name\": \"intent\", \"params\": { \"id\": \"track-details\", \"prompt\": \"Show this track's details\" } }. Buttons, links, menus and checkboxes inside the row keep their own clicks."
+    },
+    "Dialog": {
+      "description": "A modal (rendered as a Kumo LayerDialog; a bottom sheet on mobile). The only modal type: use it as the root of every overlay template. It has its own title, description, and close button; children are its body, top to bottom. Closing it fires `close` automatically. In a page block, show it with `visible: { \"path\": \"/ui/…\" }` (or `/route/<param>` to make it linkable) and open it with a `set` action on that path (e.g. a DataTable row action setting `/ui/openTrack` to `$item`); closing then clears the path.\nActions go in the dialog's footer, never as Buttons in the body (at most 3): cancel-type on the left is the built-in dismiss button (set `dismissLabel`, e.g. \"Cancel\"; never add your own Cancel/Close button); the primary action on the right is one DialogAction child (e.g. Save, Delete); a second action goes inside that DialogAction as a MenuItem (its split-button menu, e.g. \"Save as draft\"). A RecordForm in a Dialog puts its submit button in the footer automatically, so it needs no DialogAction. Dialogs that only show information need no actions.",
+      "props": {
+        "type": "object",
+        "properties": {
+          "title": {},
+          "description": {},
+          "size": {
+            "default": "base",
+            "type": "string",
+            "enum": [
+              "sm",
+              "base",
+              "lg",
+              "xl"
+            ]
+          },
+          "dismissLabel": {
+            "type": "string"
+          }
+        }
+      },
+      "children": "any",
+      "childLimits": {
+        "DialogAction": 1
+      },
+      "overlay": true
+    },
+    "DialogAction": {
+      "description": "The dialog's primary action, rendered in its footer on the right (Kumo LayerDialog.Action). At most one per Dialog. Optionally one MenuItem child: a secondary action in its split-button menu.",
+      "props": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "variant": {
+            "default": "primary",
+            "type": "string",
+            "enum": [
+              "primary",
+              "destructive"
+            ]
+          }
+        },
+        "required": [
+          "label"
+        ]
+      },
+      "children": [
+        "MenuItem"
+      ],
+      "parent": "Dialog",
+      "childLimits": {
+        "MenuItem": 1
+      },
+      "action": "fired on click (e.g. a `tool` call, then the dialog closes on success; or `set`/`navigate`)."
+    },
+    "KeyValueList": {
+      "description": "Label/value pairs for showing one record's details. Bind each `value` with a path (e.g. `$item/email`).",
+      "props": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "value": {},
+                "format": {
+                  "default": "text",
+                  "type": "string",
+                  "enum": [
+                    "text",
+                    "number",
+                    "compact",
+                    "date",
+                    "relative",
+                    "count"
+                  ]
+                }
+              },
+              "required": [
+                "label"
+              ]
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "children": "none"
+    },
+    "MenuItem": {
+      "description": "An item in an ActionMenu, or the secondary action in a DialogAction's split-button menu. Set `action`; use variant `danger` for destructive actions.",
+      "props": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "variant": {
+            "default": "default",
+            "type": "string",
+            "enum": [
+              "default",
+              "danger"
+            ]
+          }
+        },
+        "required": [
+          "label"
+        ]
+      },
+      "children": "none",
+      "parent": [
+        "ActionMenu",
+        "DialogAction"
+      ],
+      "action": "fired when the item is chosen; `$item` is the row/item the menu is in."
+    },
+    "Popover": {
+      "description": "A button that opens a small panel with its children (e.g. a 'Columns' menu of checkboxes, or filters). Good in a block toolbar.",
+      "props": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "variant": {
+            "default": "secondary",
+            "type": "string",
+            "enum": [
+              "secondary",
+              "ghost",
+              "outline"
+            ]
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ]
+      },
+      "children": "any"
+    },
+    "RecordForm": {
+      "description": "A form with Save/Cancel. On submit, fires the node's `action` with its params plus each field's value under the field `name` (usually a `tool` action whose args match the fields). Cancel fires `close`. Inside a Dialog, its submit button moves to the dialog's footer (primary, right) and Cancel is the dialog's dismiss button.",
+      "props": {
+        "type": "object",
+        "properties": {
+          "fields": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "type": {
+                  "default": "text",
+                  "type": "string",
+                  "enum": [
+                    "text",
+                    "email",
+                    "number",
+                    "textarea"
+                  ]
+                },
+                "value": {
+                  "$ref": "#/$defs/DynamicValue"
+                },
+                "required": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "label"
+              ]
+            }
+          },
+          "submitLabel": {
+            "default": "Save",
+            "type": "string"
+          },
+          "cancelLabel": {
+            "default": "Cancel",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fields"
+        ],
+        "$defs": {
+          "DynamicValue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/$defs/PathRef"
+              }
+            ]
+          },
+          "PathRef": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      },
+      "children": "none",
+      "action": "fired on submit, with the field values added to its params."
+    },
+    "Stack": {
+      "description": "Arranges children in a row or column. Use it to group controls, or as a new root to place something above/below/beside existing content.",
+      "props": {
+        "type": "object",
+        "properties": {
+          "direction": {
+            "default": "column",
+            "type": "string",
+            "enum": [
+              "row",
+              "column"
+            ]
+          },
+          "gap": {
+            "default": "base",
+            "type": "string",
+            "enum": [
+              "none",
+              "sm",
+              "base",
+              "lg"
+            ]
+          },
+          "align": {
+            "default": "stretch",
+            "type": "string",
+            "enum": [
+              "start",
+              "center",
+              "end",
+              "stretch"
+            ]
+          },
+          "justify": {
+            "default": "start",
+            "type": "string",
+            "enum": [
+              "start",
+              "center",
+              "end",
+              "between"
+            ]
+          },
+          "wrap": {
+            "default": false,
+            "type": "boolean"
+          }
+        }
+      },
+      "children": "any"
+    },
+    "Stat": {
+      "description": "A labelled headline number. Bind `value` with a path; add a `hint` explaining exactly what it counts.",
+      "props": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {},
+          "format": {
+            "default": "number",
+            "type": "string",
+            "enum": [
+              "text",
+              "number",
+              "compact",
+              "date",
+              "relative",
+              "count"
+            ]
+          },
+          "hint": {
+            "type": "string"
+          },
+          "requires": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "label"
+        ]
+      },
+      "children": "none"
+    },
+    "Text": {
+      "description": "Themed text. Bind `text` with a path for data, with an optional `format` (e.g. `count` for a list's length) and `prefix`/`suffix`. `variant`: body, secondary, success, error, mono.",
+      "props": {
+        "type": "object",
+        "properties": {
+          "text": {},
+          "format": {
+            "default": "text",
+            "type": "string",
+            "enum": [
+              "text",
+              "number",
+              "compact",
+              "date",
+              "relative",
+              "count"
+            ]
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "suffix": {
+            "type": "string"
+          },
+          "variant": {
+            "default": "body",
+            "type": "string",
+            "enum": [
+              "body",
+              "secondary",
+              "success",
+              "error",
+              "mono"
+            ]
+          },
+          "size": {
+            "default": "base",
+            "type": "string",
+            "enum": [
+              "xs",
+              "sm",
+              "base",
+              "lg"
+            ]
+          }
+        }
+      },
+      "children": "none"
+    },
+    "TextInput": {
+      "description": "A text field bound two-way to `bind`. For search or anything that should load different data, bind it to a page route param (\"/route/q\") and have sources read $route.q (see \"Interactive data\"); pair it with a Button whose action sets the same path from the field, or rely on Enter. For local state (a note, a draft), bind to /ui/....",
+      "props": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "placeholder": {
+            "type": "string"
+          },
+          "bind": {
+            "type": "string",
+            "pattern": "^\\/(ui|route)\\/"
+          },
+          "live": {
+            "default": false,
+            "type": "boolean"
+          },
+          "type": {
+            "default": "text",
+            "type": "string",
+            "enum": [
+              "text",
+              "search",
+              "email",
+              "number",
+              "url"
+            ]
+          }
+        },
+        "required": [
+          "bind"
+        ]
+      },
+      "children": "none",
+      "action": "fired when Enter is pressed, after the value is saved (e.g. a `set`, `navigate`, or `tool`); `$item` as in its list, if any."
+    }
+  }
+}

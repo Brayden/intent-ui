@@ -1,0 +1,4 @@
+# Copy to .dev.vars and fill in. Production: `npx wrangler secret put ANTHROPIC_API_KEY`.
+ANTHROPIC_API_KEY=
+# Optional override; defaults to claude-opus-5-5.
+# ANTHROPIC_MODEL=claude-opus-5-5

@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "intent-ui",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  // Workspaces persist in SQLite-backed Durable Objects (ADR 0008).
+  "durable_objects": {
+    "bindings": [
+      { "name": "WORKSPACES", "class_name": "WorkspaceStore" },
+      { "name": "DIRECTORY", "class_name": "WorkspaceDirectory" },
+      // The user's data connections and their credentials (ADR 0014).
+      { "name": "CONNECTIONS", "class_name": "ConnectionsStore" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["WorkspaceStore", "WorkspaceDirectory"] },
+    { "tag": "v2", "new_sqlite_classes": ["ConnectionsStore"] }
+  ],
+  "assets": {
+    // Serve the built React app; unknown paths fall back to index.html.
+    "not_found_handling": "single-page-application",
+    // Only /api/* reaches the Worker; everything else is served as static assets.
+    "run_worker_first": ["/api/*"]
+  }
+}

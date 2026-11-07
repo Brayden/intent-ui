@@ -1,0 +1,189 @@
+{
+  "name": "render-07-worked-example",
+  "level": "L1",
+  "rule": "RFC 0003 §15 worked example: the composed document loads and resolves",
+  "kind": "render",
+  "document": {
+    "iap": "0.1",
+    "version": 3,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Team PRs",
+          "params": {},
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "sources": {
+        "prs": {
+          "kind": "tool",
+          "id": "prs",
+          "connection": "github",
+          "tool": "search_pull_requests",
+          "args": {
+            "query": "is:open is:pr org:acme"
+          },
+          "normalize": "items.{ \"number\": number, \"repo\": $split(repository_url, \"/\")[-1], \"title\": title, \"author\": user.login, \"url\": html_url }",
+          "key": "url",
+          "schema": {}
+        }
+      },
+      "blocks": {
+        "prs-table": {
+          "id": "prs-table",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "title": "Open pull requests",
+          "inputs": {
+            "prs": "prs"
+          },
+          "view": {
+            "expr": "{ \"rows\": $prs }",
+            "schema": {}
+          },
+          "ui": {},
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "DataTable",
+              "props": {
+                "rows": {
+                  "path": "/rows"
+                },
+                "rowKey": "url"
+              },
+              "children": [
+                "c1",
+                "c2"
+              ],
+              "action": {
+                "name": "intent",
+                "params": {
+                  "id": "pr-details",
+                  "prompt": "Show this pull request's details"
+                }
+              }
+            },
+            "c1": {
+              "type": "DataColumn",
+              "props": {
+                "header": "Title",
+                "field": "title",
+                "subField": "repo"
+              }
+            },
+            "c2": {
+              "type": "DataColumn",
+              "props": {
+                "header": "Author",
+                "field": "author"
+              }
+            }
+          }
+        }
+      }
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "asOf": "2026-11-07T12:00:00Z",
+  "toolCalls": [
+    {
+      "connection": "github",
+      "tool": "search_pull_requests",
+      "args": {
+        "query": "is:open is:pr org:acme"
+      },
+      "result": {
+        "items": [
+          {
+            "number": 12,
+            "repository_url": "https://api.github.com/repos/acme/api",
+            "title": "Fix retries",
+            "user": {
+              "login": "ada"
+            },
+            "html_url": "https://github.com/acme/api/pull/12"
+          }
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "views": {
+      "prs-table": {
+        "data": {
+          "rows": [
+            {
+              "number": 12,
+              "repo": "api",
+              "title": "Fix retries",
+              "author": "ada",
+              "url": "https://github.com/acme/api/pull/12"
+            }
+          ]
+        }
+      }
+    },
+    "render": {
+      "prs-table": {
+        "root": "t",
+        "nodes": {
+          "c1": {
+            "type": "DataColumn",
+            "props": {
+              "header": "Title",
+              "field": "title",
+              "subField": "repo"
+            }
+          },
+          "c2": {
+            "type": "DataColumn",
+            "props": {
+              "header": "Author",
+              "field": "author"
+            }
+          },
+          "t": {
+            "type": "DataTable",
+            "props": {
+              "rows": [
+                {
+                  "number": 12,
+                  "repo": "api",
+                  "title": "Fix retries",
+                  "author": "ada",
+                  "url": "https://github.com/acme/api/pull/12"
+                }
+              ],
+              "rowKey": "url"
+            },
+            "children": [
+              "c1",
+              "c2"
+            ],
+            "action": {
+              "name": "intent",
+              "params": {
+                "id": "pr-details",
+                "prompt": "Show this pull request's details"
+              }
+            }
+          }
+        }
+      }
+    },
+    "unusedToolCalls": []
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "name": "validate-05-research-params",
+  "level": "L1",
+  "rule": "\u00a712.4 parameterized research needs its params declared on the page",
+  "kind": "validate",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {
+        "b": {
+          "id": "b",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "inputs": {
+            "bio": "bio"
+          },
+          "view": {
+            "expr": "{}",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/x"
+                }
+              }
+            }
+          }
+        }
+      },
+      "sources": {
+        "bio": {
+          "kind": "research",
+          "id": "bio",
+          "query": "biography of {artist}",
+          "instructions": "one row: born, origin",
+          "key": "artist",
+          "schema": {},
+          "data": [
+            {
+              "artist": "Adele",
+              "born": "1988"
+            }
+          ],
+          "provenance": {
+            "researchedAt": "2026-11-01T09:00:00Z",
+            "query": "top albums",
+            "citations": [
+              "https://example.com/charts"
+            ]
+          },
+          "params": [
+            "artist"
+          ],
+          "dataFor": {
+            "artist": "Adele"
+          }
+        }
+      }
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "expect": {
+    "valid": false,
+    "issues": [
+      "doesn't declare"
+    ]
+  }
+}

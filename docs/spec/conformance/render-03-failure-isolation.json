@@ -1,0 +1,215 @@
+{
+  "name": "render-03-failure-isolation",
+  "level": "L1",
+  "rule": "\u00a75.5 rule 4 failures are null and never fail the page; dependents fail without calling; a throwing view fails only its block",
+  "kind": "render",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {
+        "one": {
+          "id": "one",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "inputs": {
+            "a": "a",
+            "c": "c"
+          },
+          "view": {
+            "expr": "{ \"a\": $a, \"c\": $c }",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/c"
+                }
+              }
+            }
+          }
+        },
+        "two": {
+          "id": "two",
+          "page": "home",
+          "slot": "main",
+          "order": 1,
+          "inputs": {
+            "b": "b"
+          },
+          "view": {
+            "expr": "{ \"x\": $b.x }",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/x"
+                }
+              }
+            }
+          }
+        },
+        "three": {
+          "id": "three",
+          "page": "home",
+          "slot": "main",
+          "order": 2,
+          "inputs": {
+            "c": "c"
+          },
+          "view": {
+            "expr": "$error(\"boom\")",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/c"
+                }
+              }
+            }
+          }
+        }
+      },
+      "sources": {
+        "a": {
+          "kind": "tool",
+          "id": "a",
+          "connection": "svc",
+          "tool": "broken",
+          "args": {},
+          "normalize": "$",
+          "schema": {}
+        },
+        "b": {
+          "kind": "tool",
+          "id": "b",
+          "connection": "svc",
+          "tool": "depends",
+          "inputs": {
+            "a": "a"
+          },
+          "args": {},
+          "normalize": "$",
+          "schema": {}
+        },
+        "c": {
+          "kind": "tool",
+          "id": "c",
+          "connection": "svc",
+          "tool": "fine",
+          "args": {},
+          "normalize": "$",
+          "schema": {}
+        }
+      }
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "asOf": "2026-11-07T12:00:00Z",
+  "toolCalls": [
+    {
+      "connection": "svc",
+      "tool": "broken",
+      "args": {},
+      "error": "503 upstream unavailable"
+    },
+    {
+      "connection": "svc",
+      "tool": "fine",
+      "args": {},
+      "result": "ok"
+    }
+  ],
+  "expect": {
+    "sources": {
+      "a": {
+        "status": "error",
+        "error": true
+      },
+      "b": {
+        "status": "error",
+        "error": true
+      },
+      "c": {
+        "status": "ok",
+        "data": "ok"
+      }
+    },
+    "views": {
+      "one": {
+        "data": {
+          "a": null,
+          "c": "ok"
+        }
+      },
+      "two": {
+        "data": {}
+      },
+      "three": {
+        "data": null,
+        "error": true
+      }
+    },
+    "render": {
+      "one": {
+        "root": "t",
+        "nodes": {
+          "t": {
+            "type": "Text",
+            "props": {
+              "text": "ok"
+            }
+          }
+        }
+      },
+      "two": {
+        "root": "t",
+        "nodes": {
+          "t": {
+            "type": "Text",
+            "props": {}
+          }
+        }
+      },
+      "three": {
+        "root": "t",
+        "nodes": {
+          "t": {
+            "type": "Text",
+            "props": {}
+          }
+        }
+      }
+    },
+    "unusedToolCalls": []
+  }
+}

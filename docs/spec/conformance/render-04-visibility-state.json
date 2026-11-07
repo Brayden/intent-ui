@@ -1,0 +1,276 @@
+{
+  "name": "render-04-visibility-state",
+  "level": "L1",
+  "rule": "\u00a78.2 visibility grammar over /ui, /route, /meta; hidden subtrees dropped; $item bindings stay for per-item resolution",
+  "kind": "render",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          },
+          "params": {
+            "filter": {
+              "description": "Status filter",
+              "optional": true
+            }
+          }
+        }
+      },
+      "blocks": {
+        "b": {
+          "id": "b",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "inputs": {
+            "tasks": "tasks"
+          },
+          "view": {
+            "expr": "{ \"rows\": $tasks }",
+            "schema": {}
+          },
+          "root": "s",
+          "nodes": {
+            "s": {
+              "type": "Stack",
+              "props": {},
+              "children": [
+                "shown",
+                "hidden",
+                "tabA",
+                "routed",
+                "loading",
+                "table"
+              ]
+            },
+            "shown": {
+              "type": "Text",
+              "props": {
+                "text": "details"
+              },
+              "visible": {
+                "path": "/ui/showDetails"
+              }
+            },
+            "hidden": {
+              "type": "Text",
+              "props": {
+                "text": "summary"
+              },
+              "visible": {
+                "not": {
+                  "path": "/ui/showDetails"
+                }
+              }
+            },
+            "tabA": {
+              "type": "Stack",
+              "props": {},
+              "children": [
+                "tabAText"
+              ],
+              "visible": {
+                "eq": [
+                  {
+                    "path": "/ui/tab"
+                  },
+                  "a"
+                ]
+              }
+            },
+            "tabAText": {
+              "type": "Text",
+              "props": {
+                "text": "only on tab a"
+              }
+            },
+            "routed": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/route/filter"
+                }
+              },
+              "visible": {
+                "and": [
+                  {
+                    "path": "/route/filter"
+                  },
+                  {
+                    "eq": [
+                      {
+                        "path": "/route/filter"
+                      },
+                      "open"
+                    ]
+                  }
+                ]
+              }
+            },
+            "loading": {
+              "type": "Text",
+              "props": {
+                "text": "loading"
+              },
+              "visible": {
+                "or": [
+                  false,
+                  {
+                    "path": "/meta/loading"
+                  }
+                ]
+              }
+            },
+            "table": {
+              "type": "DataTable",
+              "props": {
+                "rows": {
+                  "path": "/rows"
+                },
+                "rowKey": "id"
+              },
+              "children": [
+                "col"
+              ]
+            },
+            "col": {
+              "type": "DataColumn",
+              "props": {
+                "header": "Task"
+              },
+              "children": [
+                "badge"
+              ]
+            },
+            "badge": {
+              "type": "Badge",
+              "props": {
+                "text": {
+                  "path": "$item/label"
+                },
+                "variant": "error"
+              },
+              "visible": {
+                "path": "$item/urgent"
+              }
+            }
+          },
+          "ui": {
+            "showDetails": true,
+            "tab": "b"
+          }
+        }
+      },
+      "sources": {
+        "tasks": {
+          "kind": "local",
+          "id": "tasks",
+          "key": "id",
+          "data": [
+            {
+              "id": "t1",
+              "label": "Ship",
+              "urgent": true
+            },
+            {
+              "id": "t2",
+              "label": "Polish",
+              "urgent": false
+            }
+          ]
+        }
+      }
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "route": {
+    "filter": "open"
+  },
+  "asOf": "2026-11-07T12:00:00Z",
+  "expect": {
+    "render": {
+      "b": {
+        "root": "s",
+        "nodes": {
+          "s": {
+            "type": "Stack",
+            "props": {},
+            "children": [
+              "shown",
+              "routed",
+              "table"
+            ]
+          },
+          "shown": {
+            "type": "Text",
+            "props": {
+              "text": "details"
+            }
+          },
+          "routed": {
+            "type": "Text",
+            "props": {
+              "text": "open"
+            }
+          },
+          "table": {
+            "type": "DataTable",
+            "props": {
+              "rows": [
+                {
+                  "id": "t1",
+                  "label": "Ship",
+                  "urgent": true
+                },
+                {
+                  "id": "t2",
+                  "label": "Polish",
+                  "urgent": false
+                }
+              ],
+              "rowKey": "id"
+            },
+            "children": [
+              "col"
+            ]
+          },
+          "col": {
+            "type": "DataColumn",
+            "props": {
+              "header": "Task"
+            },
+            "children": [
+              "badge"
+            ]
+          },
+          "badge": {
+            "type": "Badge",
+            "props": {
+              "text": {
+                "path": "$item/label"
+              },
+              "variant": "error"
+            },
+            "visible": {
+              "path": "$item/urgent"
+            }
+          }
+        }
+      }
+    }
+  }
+}

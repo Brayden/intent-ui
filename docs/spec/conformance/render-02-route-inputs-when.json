@@ -1,0 +1,240 @@
+{
+  "name": "render-02-route-inputs-when",
+  "level": "L1",
+  "rule": "\u00a74 only declared params reach sources; \u00a75.2 args see $route and inputs; when=false skips the call",
+  "kind": "render",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "profile": {
+          "id": "profile",
+          "title": "Profile",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          },
+          "params": {
+            "login": {
+              "description": "GitHub login",
+              "from": "login",
+              "example": "ada"
+            },
+            "q": {
+              "description": "Search text",
+              "optional": true
+            }
+          }
+        }
+      },
+      "blocks": {
+        "p": {
+          "id": "p",
+          "page": "profile",
+          "slot": "main",
+          "order": 0,
+          "inputs": {
+            "user": "user",
+            "repos": "repos",
+            "hits": "search"
+          },
+          "view": {
+            "expr": "{ \"login\": $user.login, \"extra\": $route.extra, \"repos\": $repos, \"hits\": $hits }",
+            "schema": {}
+          },
+          "root": "s",
+          "nodes": {
+            "s": {
+              "type": "Stack",
+              "props": {},
+              "children": [
+                "a",
+                "b"
+              ]
+            },
+            "a": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/login"
+                }
+              }
+            },
+            "b": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/route/login"
+                },
+                "prefix": "@"
+              }
+            }
+          }
+        }
+      },
+      "sources": {
+        "user": {
+          "kind": "tool",
+          "id": "user",
+          "connection": "gh",
+          "tool": "get_user",
+          "args": {
+            "login": {
+              "expr": "$route.login"
+            }
+          },
+          "normalize": "{ \"login\": login, \"org\": company }",
+          "schema": {}
+        },
+        "repos": {
+          "kind": "tool",
+          "id": "repos",
+          "connection": "gh",
+          "tool": "list_repos",
+          "inputs": {
+            "u": "user"
+          },
+          "args": {
+            "owner": {
+              "expr": "$u.org"
+            },
+            "per_page": 2
+          },
+          "normalize": "$.{ \"name\": name }",
+          "key": "name",
+          "schema": {}
+        },
+        "search": {
+          "kind": "tool",
+          "id": "search",
+          "connection": "gh",
+          "tool": "search",
+          "args": {
+            "q": {
+              "expr": "$route.q"
+            }
+          },
+          "when": "$route.q",
+          "normalize": "items",
+          "key": "id",
+          "schema": {}
+        }
+      }
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "page": "profile",
+  "route": {
+    "login": "ada",
+    "extra": "ignored"
+  },
+  "asOf": "2026-11-07T12:00:00Z",
+  "toolCalls": [
+    {
+      "connection": "gh",
+      "tool": "get_user",
+      "args": {
+        "login": "ada"
+      },
+      "result": {
+        "login": "ada",
+        "company": "analytical"
+      }
+    },
+    {
+      "connection": "gh",
+      "tool": "list_repos",
+      "args": {
+        "owner": "analytical",
+        "per_page": 2
+      },
+      "result": [
+        {
+          "name": "engine"
+        },
+        {
+          "name": "notes"
+        }
+      ]
+    }
+  ],
+  "expect": {
+    "sources": {
+      "user": {
+        "status": "ok",
+        "data": {
+          "login": "ada",
+          "org": "analytical"
+        }
+      },
+      "repos": {
+        "status": "ok",
+        "data": [
+          {
+            "name": "engine"
+          },
+          {
+            "name": "notes"
+          }
+        ]
+      },
+      "search": {
+        "status": "ok",
+        "data": []
+      }
+    },
+    "views": {
+      "p": {
+        "data": {
+          "login": "ada",
+          "repos": [
+            {
+              "name": "engine"
+            },
+            {
+              "name": "notes"
+            }
+          ],
+          "hits": []
+        }
+      }
+    },
+    "render": {
+      "p": {
+        "root": "s",
+        "nodes": {
+          "s": {
+            "type": "Stack",
+            "props": {},
+            "children": [
+              "a",
+              "b"
+            ]
+          },
+          "a": {
+            "type": "Text",
+            "props": {
+              "text": "ada"
+            }
+          },
+          "b": {
+            "type": "Text",
+            "props": {
+              "text": "ada",
+              "prefix": "@"
+            }
+          }
+        }
+      }
+    },
+    "unusedToolCalls": []
+  }
+}

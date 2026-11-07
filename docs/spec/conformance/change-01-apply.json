@@ -1,0 +1,264 @@
+{
+  "name": "change-01-apply",
+  "level": "L1",
+  "rule": "§11.3 ops apply in order; §11.4 version increases by one",
+  "kind": "change",
+  "document": {
+    "iap": "0.1",
+    "version": 4,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {
+        "b": {
+          "id": "b",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "inputs": {
+            "l": "l"
+          },
+          "view": {
+            "expr": "{ \"x\": $count($l) }",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/x"
+                }
+              }
+            }
+          }
+        }
+      },
+      "sources": {
+        "l": {
+          "kind": "local",
+          "id": "l",
+          "data": []
+        }
+      }
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "change": {
+    "baseVersion": 4,
+    "summary": "Add a heading and a team source",
+    "ops": [
+      {
+        "op": "putSource",
+        "source": {
+          "kind": "local",
+          "id": "team",
+          "data": [
+            {
+              "id": "e1"
+            }
+          ]
+        }
+      },
+      {
+        "op": "blockOps",
+        "block": "b",
+        "ops": [
+          {
+            "op": "upsert",
+            "id": "h",
+            "node": {
+              "type": "Text",
+              "props": {
+                "text": "Team",
+                "size": "lg"
+              }
+            }
+          },
+          {
+            "op": "upsert",
+            "id": "root",
+            "node": {
+              "type": "Stack",
+              "props": {},
+              "children": [
+                "h",
+                "t"
+              ]
+            }
+          },
+          {
+            "op": "setRoot",
+            "id": "root"
+          }
+        ]
+      },
+      {
+        "op": "putBlock",
+        "block": {
+          "id": "b2",
+          "page": "home",
+          "slot": "main",
+          "order": 1,
+          "inputs": {
+            "team": "team"
+          },
+          "view": {
+            "expr": "{ \"n\": $count($team) }",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/n"
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "expect": {
+    "accepted": true,
+    "document": {
+      "iap": "0.1",
+      "version": 5,
+      "spec": {
+        "specVersion": 0,
+        "catalogVersion": "kumo@2.17",
+        "pages": {
+          "home": {
+            "id": "home",
+            "title": "Home",
+            "layout": {
+              "root": "main",
+              "nodes": {
+                "main": {
+                  "kind": "slot"
+                }
+              }
+            },
+            "params": {}
+          }
+        },
+        "blocks": {
+          "b": {
+            "root": "root",
+            "nodes": {
+              "t": {
+                "type": "Text",
+                "props": {
+                  "text": {
+                    "path": "/x"
+                  }
+                }
+              },
+              "h": {
+                "type": "Text",
+                "props": {
+                  "text": "Team",
+                  "size": "lg"
+                }
+              },
+              "root": {
+                "type": "Stack",
+                "props": {},
+                "children": [
+                  "h",
+                  "t"
+                ]
+              }
+            },
+            "id": "b",
+            "page": "home",
+            "slot": "main",
+            "order": 0,
+            "frame": {
+              "style": "card",
+              "title": true,
+              "sources": true,
+              "freshness": true
+            },
+            "inputs": {
+              "l": "l"
+            },
+            "view": {
+              "expr": "{ \"x\": $count($l) }",
+              "schema": {}
+            },
+            "ui": {}
+          },
+          "b2": {
+            "root": "t",
+            "nodes": {
+              "t": {
+                "type": "Text",
+                "props": {
+                  "text": {
+                    "path": "/n"
+                  }
+                }
+              }
+            },
+            "id": "b2",
+            "page": "home",
+            "slot": "main",
+            "order": 1,
+            "frame": {
+              "style": "card",
+              "title": true,
+              "sources": true,
+              "freshness": true
+            },
+            "inputs": {
+              "team": "team"
+            },
+            "view": {
+              "expr": "{ \"n\": $count($team) }",
+              "schema": {}
+            },
+            "ui": {}
+          }
+        },
+        "sources": {
+          "l": {
+            "kind": "local",
+            "id": "l",
+            "data": []
+          },
+          "team": {
+            "kind": "local",
+            "id": "team",
+            "data": [
+              {
+                "id": "e1"
+              }
+            ]
+          }
+        }
+      },
+      "templates": [],
+      "aliases": {}
+    }
+  }
+}

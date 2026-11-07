@@ -1,0 +1,143 @@
+{
+  "name": "render-06-research",
+  "level": "L1",
+  "rule": "\u00a75.4 research is served from its recorded result, per param values, without re-running on load",
+  "kind": "render",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "artist": {
+          "id": "artist",
+          "title": "Artist",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          },
+          "params": {
+            "artist": {
+              "description": "Artist name",
+              "from": "name",
+              "example": "Adele"
+            }
+          }
+        }
+      },
+      "blocks": {
+        "r": {
+          "id": "r",
+          "page": "artist",
+          "slot": "main",
+          "order": 0,
+          "inputs": {
+            "charts": "charts",
+            "bio": "bio"
+          },
+          "view": {
+            "expr": "{ \"top\": $charts[0].title, \"born\": $bio.born }",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/born"
+                }
+              }
+            }
+          }
+        }
+      },
+      "sources": {
+        "charts": {
+          "kind": "research",
+          "id": "charts",
+          "query": "top albums this week",
+          "instructions": "rank, title",
+          "key": "rank",
+          "schema": {},
+          "data": [
+            {
+              "rank": 1,
+              "title": "Alpha"
+            }
+          ],
+          "provenance": {
+            "researchedAt": "2026-11-01T09:00:00Z",
+            "query": "top albums",
+            "citations": [
+              "https://example.com/charts"
+            ]
+          }
+        },
+        "bio": {
+          "kind": "research",
+          "id": "bio",
+          "query": "biography of {artist}",
+          "instructions": "one row: born, origin",
+          "key": "artist",
+          "schema": {},
+          "data": [
+            {
+              "artist": "Adele",
+              "born": "1988"
+            }
+          ],
+          "provenance": {
+            "researchedAt": "2026-11-01T09:00:00Z",
+            "query": "top albums",
+            "citations": [
+              "https://example.com/charts"
+            ]
+          },
+          "params": [
+            "artist"
+          ],
+          "dataFor": {
+            "artist": "Adele"
+          }
+        }
+      }
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "page": "artist",
+  "route": {
+    "artist": "Adele"
+  },
+  "asOf": "2026-11-07T12:00:00Z",
+  "expect": {
+    "views": {
+      "r": {
+        "data": {
+          "top": "Alpha",
+          "born": "1988"
+        }
+      }
+    },
+    "render": {
+      "r": {
+        "root": "t",
+        "nodes": {
+          "t": {
+            "type": "Text",
+            "props": {
+              "text": "1988"
+            }
+          }
+        }
+      }
+    },
+    "unusedToolCalls": []
+  }
+}

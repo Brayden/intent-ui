@@ -1,0 +1,23 @@
+/* Kumo setup — order matters: @source, then Kumo styles, then Tailwind. */
+@source "../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
+@import "@cloudflare/kumo/styles/tailwind";
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+/*
+ * The app is its own stacking context, so z-indexes inside it (the compose bar, the floating
+ * change prompt) never rise above Kumo layers (LayerDialog, menus, popovers, toasts), which
+ * portal to <body> after #root and have no z-index of their own.
+ */
+#root {
+  isolation: isolate;
+}

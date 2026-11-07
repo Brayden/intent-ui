@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://intent-ui.dev/spec/0.1/catalog.schema.json",
+  "title": "IAP catalog",
+  "description": "A library-neutral list of component types (RFC 0003 §7.2).",
+  "type": "object",
+  "required": [
+    "id",
+    "version",
+    "components"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "description",
+          "props",
+          "children"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "props": {
+            "type": "object",
+            "description": "JSON Schema for the node's props"
+          },
+          "children": {
+            "oneOf": [
+              {
+                "enum": [
+                  "none",
+                  "any"
+                ]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "parent": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "childLimits": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "action": {
+            "type": "string",
+            "description": "Present iff the component fires its node's action; says when."
+          },
+          "overlay": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

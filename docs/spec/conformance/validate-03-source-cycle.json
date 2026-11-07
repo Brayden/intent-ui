@@ -1,0 +1,88 @@
+{
+  "name": "validate-03-source-cycle",
+  "level": "L1",
+  "rule": "\u00a712.3 the source graph is acyclic",
+  "kind": "validate",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {
+        "b": {
+          "id": "b",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "inputs": {
+            "x": "x"
+          },
+          "view": {
+            "expr": "{}",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/x"
+                }
+              }
+            }
+          }
+        }
+      },
+      "sources": {
+        "x": {
+          "kind": "tool",
+          "id": "x",
+          "connection": "c",
+          "tool": "t",
+          "inputs": {
+            "y": "y"
+          },
+          "args": {},
+          "normalize": "$",
+          "schema": {}
+        },
+        "y": {
+          "kind": "tool",
+          "id": "y",
+          "connection": "c",
+          "tool": "t",
+          "inputs": {
+            "x": "x"
+          },
+          "args": {},
+          "normalize": "$",
+          "schema": {}
+        }
+      }
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "expect": {
+    "valid": false,
+    "issues": [
+      "source cycle"
+    ]
+  }
+}

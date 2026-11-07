@@ -1,0 +1,62 @@
+{
+  "name": "validate-07-action-not-allowed",
+  "level": "L1",
+  "rule": "\u00a77.2 actions only on components whose catalog entry has `action`",
+  "kind": "validate",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {
+        "b": {
+          "id": "b",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "inputs": {},
+          "view": {
+            "expr": "{}",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Text",
+              "props": {
+                "text": "hi"
+              },
+              "action": {
+                "name": "refresh"
+              }
+            }
+          }
+        }
+      },
+      "sources": {}
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "expect": {
+    "valid": false,
+    "issues": [
+      "action"
+    ]
+  }
+}

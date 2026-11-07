@@ -1,0 +1,110 @@
+{
+  "name": "intent-03-materialize",
+  "level": "L2",
+  "rule": "\u00a710.1 step 4 with nothing compatible, the materializer runs",
+  "kind": "intent",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {},
+      "sources": {}
+    },
+    "templates": [
+      {
+        "id": "tpl-old",
+        "intentId": "person-card",
+        "prompt": "Show this person's details",
+        "summary": "Person details",
+        "itemFields": [
+          "name"
+        ],
+        "tools": [],
+        "root": "d",
+        "nodes": {
+          "d": {
+            "type": "Dialog",
+            "props": {
+              "title": {
+                "path": "$item/name"
+              }
+            },
+            "children": [
+              "k"
+            ]
+          },
+          "k": {
+            "type": "Text",
+            "props": {
+              "text": {
+                "path": "$item/title"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "tpl-person",
+        "intentId": "person-details",
+        "prompt": "Show this person's details",
+        "summary": "Person details",
+        "itemFields": [
+          "name",
+          "title"
+        ],
+        "tools": [],
+        "root": "d",
+        "nodes": {
+          "d": {
+            "type": "Dialog",
+            "props": {
+              "title": {
+                "path": "$item/name"
+              }
+            },
+            "children": [
+              "k"
+            ]
+          },
+          "k": {
+            "type": "Text",
+            "props": {
+              "text": {
+                "path": "$item/title"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "aliases": {
+      "[\"person-details\",\"Show this person's details\"]": "tpl-person"
+    }
+  },
+  "intent": {
+    "id": "person-details",
+    "prompt": "Show this person's details"
+  },
+  "item": {
+    "id": 7
+  },
+  "expect": {
+    "via": "materialize"
+  }
+}

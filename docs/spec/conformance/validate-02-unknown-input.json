@@ -1,0 +1,63 @@
+{
+  "name": "validate-02-unknown-input",
+  "level": "L1",
+  "rule": "\u00a712.3 every block input resolves",
+  "kind": "validate",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {
+        "b": {
+          "id": "b",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "inputs": {
+            "l": "missing"
+          },
+          "view": {
+            "expr": "{}",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/x"
+                }
+              }
+            }
+          }
+        }
+      },
+      "sources": {}
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "expect": {
+    "valid": false,
+    "issues": [
+      "unknown source \"missing\""
+    ]
+  }
+}

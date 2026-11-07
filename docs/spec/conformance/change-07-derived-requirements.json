@@ -1,0 +1,292 @@
+{
+  "name": "change-07-derived-requirements",
+  "level": "L2",
+  "rule": "§10.2 itemFields and tools are derived from the tree, not taken from the writer",
+  "kind": "change",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {},
+      "sources": {}
+    },
+    "templates": [
+      {
+        "id": "tpl-old",
+        "intentId": "person-card",
+        "prompt": "Show this person's details",
+        "summary": "Person details",
+        "itemFields": [
+          "name"
+        ],
+        "tools": [],
+        "root": "d",
+        "nodes": {
+          "d": {
+            "type": "Dialog",
+            "props": {
+              "title": {
+                "path": "$item/name"
+              }
+            },
+            "children": [
+              "k"
+            ]
+          },
+          "k": {
+            "type": "Text",
+            "props": {
+              "text": {
+                "path": "$item/title"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "tpl-person",
+        "intentId": "person-details",
+        "prompt": "Show this person's details",
+        "summary": "Person details",
+        "itemFields": [
+          "name",
+          "title"
+        ],
+        "tools": [],
+        "root": "d",
+        "nodes": {
+          "d": {
+            "type": "Dialog",
+            "props": {
+              "title": {
+                "path": "$item/name"
+              }
+            },
+            "children": [
+              "k"
+            ]
+          },
+          "k": {
+            "type": "Text",
+            "props": {
+              "text": {
+                "path": "$item/title"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "aliases": {
+      "[\"person-details\",\"Show this person's details\"]": "tpl-person"
+    }
+  },
+  "change": {
+    "baseVersion": 1,
+    "summary": "Add archive dialog",
+    "ops": [
+      {
+        "op": "putTemplate",
+        "template": {
+          "id": "tpl-claims",
+          "intentId": "x",
+          "prompt": "x",
+          "summary": "x",
+          "itemFields": [
+            "everything"
+          ],
+          "tools": [
+            "evil/drop_db"
+          ],
+          "root": "d",
+          "nodes": {
+            "d": {
+              "type": "Dialog",
+              "props": {
+                "title": {
+                  "path": "$item/name"
+                }
+              },
+              "children": [
+                "a"
+              ]
+            },
+            "a": {
+              "type": "DialogAction",
+              "props": {
+                "label": "Archive"
+              },
+              "action": {
+                "name": "tool",
+                "params": {
+                  "connection": "acme",
+                  "tool": "archive",
+                  "id": {
+                    "path": "$item/id"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "expect": {
+    "accepted": true,
+    "document": {
+      "iap": "0.1",
+      "version": 2,
+      "spec": {
+        "specVersion": 0,
+        "catalogVersion": "kumo@2.17",
+        "pages": {
+          "home": {
+            "id": "home",
+            "title": "Home",
+            "layout": {
+              "root": "main",
+              "nodes": {
+                "main": {
+                  "kind": "slot"
+                }
+              }
+            },
+            "params": {}
+          }
+        },
+        "blocks": {},
+        "sources": {}
+      },
+      "templates": [
+        {
+          "root": "d",
+          "nodes": {
+            "d": {
+              "type": "Dialog",
+              "props": {
+                "title": {
+                  "path": "$item/name"
+                }
+              },
+              "children": [
+                "k"
+              ]
+            },
+            "k": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "$item/title"
+                }
+              }
+            }
+          },
+          "id": "tpl-old",
+          "intentId": "person-card",
+          "prompt": "Show this person's details",
+          "summary": "Person details",
+          "itemFields": [
+            "name"
+          ],
+          "tools": []
+        },
+        {
+          "root": "d",
+          "nodes": {
+            "d": {
+              "type": "Dialog",
+              "props": {
+                "title": {
+                  "path": "$item/name"
+                }
+              },
+              "children": [
+                "k"
+              ]
+            },
+            "k": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "$item/title"
+                }
+              }
+            }
+          },
+          "id": "tpl-person",
+          "intentId": "person-details",
+          "prompt": "Show this person's details",
+          "summary": "Person details",
+          "itemFields": [
+            "name",
+            "title"
+          ],
+          "tools": []
+        },
+        {
+          "root": "d",
+          "nodes": {
+            "d": {
+              "type": "Dialog",
+              "props": {
+                "title": {
+                  "path": "$item/name"
+                }
+              },
+              "children": [
+                "a"
+              ]
+            },
+            "a": {
+              "type": "DialogAction",
+              "props": {
+                "label": "Archive"
+              },
+              "action": {
+                "name": "tool",
+                "params": {
+                  "connection": "acme",
+                  "tool": "archive",
+                  "id": {
+                    "path": "$item/id"
+                  }
+                }
+              }
+            }
+          },
+          "id": "tpl-claims",
+          "intentId": "x",
+          "prompt": "x",
+          "summary": "x",
+          "itemFields": [
+            "id",
+            "name"
+          ],
+          "tools": [
+            "acme/archive"
+          ]
+        }
+      ],
+      "aliases": {
+        "[\"person-details\",\"Show this person's details\"]": "tpl-person"
+      }
+    }
+  }
+}

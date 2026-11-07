@@ -1,0 +1,66 @@
+{
+  "name": "validate-01-valid",
+  "level": "L1",
+  "rule": "\u00a712 a well-formed document is accepted",
+  "kind": "validate",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {
+        "b": {
+          "id": "b",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "inputs": {
+            "l": "l"
+          },
+          "view": {
+            "expr": "{ \"x\": $count($l) }",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/x"
+                }
+              }
+            }
+          }
+        }
+      },
+      "sources": {
+        "l": {
+          "kind": "local",
+          "id": "l",
+          "data": []
+        }
+      }
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "expect": {
+    "valid": true
+  }
+}

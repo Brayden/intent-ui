@@ -1,0 +1,66 @@
+{
+  "name": "validate-08-parent-rule",
+  "level": "L1",
+  "rule": "\u00a77.2 `parent` is enforced",
+  "kind": "validate",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {
+        "b": {
+          "id": "b",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "inputs": {},
+          "view": {
+            "expr": "{}",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Stack",
+              "props": {},
+              "children": [
+                "a"
+              ]
+            },
+            "a": {
+              "type": "DialogAction",
+              "props": {
+                "label": "Save"
+              }
+            }
+          }
+        }
+      },
+      "sources": {}
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "expect": {
+    "valid": false,
+    "issues": [
+      "DialogAction"
+    ]
+  }
+}

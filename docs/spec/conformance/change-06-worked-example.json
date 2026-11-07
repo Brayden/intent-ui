@@ -1,0 +1,327 @@
+{
+  "name": "change-06-worked-example",
+  "level": "L2",
+  "rule": "RFC 0003 §15 worked example: the first click's template and alias are a valid change",
+  "kind": "change",
+  "document": {
+    "iap": "0.1",
+    "version": 3,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Team PRs",
+          "params": {},
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "sources": {
+        "prs": {
+          "kind": "tool",
+          "id": "prs",
+          "connection": "github",
+          "tool": "search_pull_requests",
+          "args": {
+            "query": "is:open is:pr org:acme"
+          },
+          "normalize": "items.{ \"number\": number, \"repo\": $split(repository_url, \"/\")[-1], \"title\": title, \"author\": user.login, \"url\": html_url }",
+          "key": "url",
+          "schema": {}
+        }
+      },
+      "blocks": {
+        "prs-table": {
+          "id": "prs-table",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "title": "Open pull requests",
+          "inputs": {
+            "prs": "prs"
+          },
+          "view": {
+            "expr": "{ \"rows\": $prs }",
+            "schema": {}
+          },
+          "ui": {},
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "DataTable",
+              "props": {
+                "rows": {
+                  "path": "/rows"
+                },
+                "rowKey": "url"
+              },
+              "children": [
+                "c1",
+                "c2"
+              ],
+              "action": {
+                "name": "intent",
+                "params": {
+                  "id": "pr-details",
+                  "prompt": "Show this pull request's details"
+                }
+              }
+            },
+            "c1": {
+              "type": "DataColumn",
+              "props": {
+                "header": "Title",
+                "field": "title",
+                "subField": "repo"
+              }
+            },
+            "c2": {
+              "type": "DataColumn",
+              "props": {
+                "header": "Author",
+                "field": "author"
+              }
+            }
+          }
+        }
+      }
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "change": {
+    "baseVersion": 3,
+    "summary": "Pull request details",
+    "ops": [
+      {
+        "op": "putTemplate",
+        "template": {
+          "id": "tpl-pr",
+          "intentId": "pr-details",
+          "prompt": "Show this pull request's details",
+          "summary": "Title, author and a link to the pull request.",
+          "itemFields": [
+            "author",
+            "title",
+            "url"
+          ],
+          "tools": [],
+          "root": "d",
+          "nodes": {
+            "d": {
+              "type": "Dialog",
+              "props": {
+                "title": {
+                  "path": "$item/title"
+                },
+                "dismissLabel": "Close"
+              },
+              "children": [
+                "by",
+                "go"
+              ]
+            },
+            "by": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "$item/author"
+                },
+                "prefix": "Opened by ",
+                "variant": "secondary"
+              }
+            },
+            "go": {
+              "type": "DialogAction",
+              "props": {
+                "label": "Open on GitHub"
+              },
+              "action": {
+                "name": "navigate",
+                "params": {
+                  "url": {
+                    "path": "$item/url"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "op": "setAlias",
+        "intent": {
+          "id": "pr-details",
+          "prompt": "Show this pull request's details"
+        },
+        "template": "tpl-pr"
+      }
+    ]
+  },
+  "expect": {
+    "accepted": true,
+    "document": {
+      "iap": "0.1",
+      "version": 4,
+      "spec": {
+        "specVersion": 0,
+        "catalogVersion": "kumo@2.17",
+        "pages": {
+          "home": {
+            "id": "home",
+            "title": "Team PRs",
+            "layout": {
+              "root": "main",
+              "nodes": {
+                "main": {
+                  "kind": "slot"
+                }
+              }
+            },
+            "params": {}
+          }
+        },
+        "blocks": {
+          "prs-table": {
+            "root": "t",
+            "nodes": {
+              "t": {
+                "type": "DataTable",
+                "props": {
+                  "rows": {
+                    "path": "/rows"
+                  },
+                  "rowKey": "url"
+                },
+                "children": [
+                  "c1",
+                  "c2"
+                ],
+                "action": {
+                  "name": "intent",
+                  "params": {
+                    "id": "pr-details",
+                    "prompt": "Show this pull request's details"
+                  }
+                }
+              },
+              "c1": {
+                "type": "DataColumn",
+                "props": {
+                  "header": "Title",
+                  "field": "title",
+                  "subField": "repo"
+                }
+              },
+              "c2": {
+                "type": "DataColumn",
+                "props": {
+                  "header": "Author",
+                  "field": "author"
+                }
+              }
+            },
+            "id": "prs-table",
+            "page": "home",
+            "slot": "main",
+            "order": 0,
+            "title": "Open pull requests",
+            "frame": {
+              "style": "card",
+              "title": true,
+              "sources": true,
+              "freshness": true
+            },
+            "inputs": {
+              "prs": "prs"
+            },
+            "view": {
+              "expr": "{ \"rows\": $prs }",
+              "schema": {}
+            },
+            "ui": {}
+          }
+        },
+        "sources": {
+          "prs": {
+            "kind": "tool",
+            "id": "prs",
+            "connection": "github",
+            "tool": "search_pull_requests",
+            "args": {
+              "query": "is:open is:pr org:acme"
+            },
+            "normalize": "items.{ \"number\": number, \"repo\": $split(repository_url, \"/\")[-1], \"title\": title, \"author\": user.login, \"url\": html_url }",
+            "key": "url",
+            "schema": {}
+          }
+        }
+      },
+      "templates": [
+        {
+          "root": "d",
+          "nodes": {
+            "d": {
+              "type": "Dialog",
+              "props": {
+                "title": {
+                  "path": "$item/title"
+                },
+                "dismissLabel": "Close"
+              },
+              "children": [
+                "by",
+                "go"
+              ]
+            },
+            "by": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "$item/author"
+                },
+                "prefix": "Opened by ",
+                "variant": "secondary"
+              }
+            },
+            "go": {
+              "type": "DialogAction",
+              "props": {
+                "label": "Open on GitHub"
+              },
+              "action": {
+                "name": "navigate",
+                "params": {
+                  "url": {
+                    "path": "$item/url"
+                  }
+                }
+              }
+            }
+          },
+          "id": "tpl-pr",
+          "intentId": "pr-details",
+          "prompt": "Show this pull request's details",
+          "summary": "Title, author and a link to the pull request.",
+          "itemFields": [
+            "author",
+            "title",
+            "url"
+          ],
+          "tools": []
+        }
+      ],
+      "aliases": {
+        "[\"pr-details\",\"Show this pull request's details\"]": "tpl-pr"
+      }
+    }
+  }
+}

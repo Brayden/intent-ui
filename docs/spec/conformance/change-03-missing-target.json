@@ -1,0 +1,85 @@
+{
+  "name": "change-03-missing-target",
+  "level": "L1",
+  "rule": "\u00a711.3 ops that reference nothing are rejected",
+  "kind": "change",
+  "document": {
+    "iap": "0.1",
+    "version": 4,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {
+        "b": {
+          "id": "b",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "inputs": {
+            "l": "l"
+          },
+          "view": {
+            "expr": "{ \"x\": $count($l) }",
+            "schema": {}
+          },
+          "root": "t",
+          "nodes": {
+            "t": {
+              "type": "Text",
+              "props": {
+                "text": {
+                  "path": "/x"
+                }
+              }
+            }
+          }
+        }
+      },
+      "sources": {
+        "l": {
+          "kind": "local",
+          "id": "l",
+          "data": []
+        }
+      }
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "change": {
+    "baseVersion": 4,
+    "summary": "Edit",
+    "ops": [
+      {
+        "op": "blockOps",
+        "block": "nope",
+        "ops": [
+          {
+            "op": "remove",
+            "id": "t"
+          }
+        ]
+      }
+    ]
+  },
+  "expect": {
+    "accepted": false,
+    "issues": [
+      "no block \"nope\""
+    ]
+  }
+}

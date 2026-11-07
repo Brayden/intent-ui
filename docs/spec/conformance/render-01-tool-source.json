@@ -1,0 +1,279 @@
+{
+  "name": "render-01-tool-source",
+  "level": "L1",
+  "rule": "\u00a75.5 sources run once, normalize, key \u21d2 list; \u00a76 view; \u00a78.3 resolution",
+  "kind": "render",
+  "document": {
+    "iap": "0.1",
+    "version": 1,
+    "spec": {
+      "specVersion": 0,
+      "catalogVersion": "kumo@2.17",
+      "pages": {
+        "home": {
+          "id": "home",
+          "title": "Home",
+          "layout": {
+            "root": "main",
+            "nodes": {
+              "main": {
+                "kind": "slot"
+              }
+            }
+          }
+        }
+      },
+      "blocks": {
+        "team": {
+          "id": "team",
+          "page": "home",
+          "slot": "main",
+          "order": 0,
+          "inputs": {
+            "people": "people",
+            "leads": "leads"
+          },
+          "view": {
+            "expr": "{ \"rows\": $people, \"count\": $count($people), \"leads\": $leads }",
+            "schema": {}
+          },
+          "root": "s",
+          "nodes": {
+            "s": {
+              "type": "Stack",
+              "props": {
+                "gap": "lg"
+              },
+              "children": [
+                "count",
+                "table"
+              ]
+            },
+            "count": {
+              "type": "Stat",
+              "props": {
+                "label": "Members",
+                "value": {
+                  "path": "/count"
+                },
+                "hint": {
+                  "path": "/meta/title"
+                }
+              }
+            },
+            "table": {
+              "type": "DataTable",
+              "props": {
+                "rows": {
+                  "path": "/rows"
+                },
+                "rowKey": "id"
+              },
+              "children": [
+                "c1"
+              ],
+              "action": {
+                "name": "intent",
+                "params": {
+                  "id": "person-details",
+                  "prompt": "Show this person's details"
+                }
+              }
+            },
+            "c1": {
+              "type": "DataColumn",
+              "props": {
+                "header": "Name",
+                "field": "name",
+                "subField": "title"
+              }
+            }
+          },
+          "title": "Core team"
+        }
+      },
+      "sources": {
+        "people": {
+          "kind": "tool",
+          "id": "people",
+          "connection": "acme",
+          "tool": "list_people",
+          "args": {
+            "team": "core"
+          },
+          "normalize": "employees.{ \"id\": id, \"name\": full_name, \"title\": title }",
+          "key": "id",
+          "schema": {}
+        },
+        "leads": {
+          "kind": "tool",
+          "id": "leads",
+          "connection": "acme",
+          "tool": "list_people",
+          "args": {
+            "team": "core",
+            "role": "lead"
+          },
+          "normalize": "employees.{ \"id\": id, \"name\": full_name }",
+          "key": "id",
+          "schema": {}
+        }
+      }
+    },
+    "templates": [],
+    "aliases": {}
+  },
+  "asOf": "2026-11-07T12:00:00Z",
+  "toolCalls": [
+    {
+      "connection": "acme",
+      "tool": "list_people",
+      "args": {
+        "team": "core"
+      },
+      "result": {
+        "employees": [
+          {
+            "id": "e1",
+            "full_name": "Ada Lovelace",
+            "title": "Engineer"
+          },
+          {
+            "id": "e2",
+            "full_name": "Grace Hopper",
+            "title": "Lead"
+          }
+        ]
+      }
+    },
+    {
+      "connection": "acme",
+      "tool": "list_people",
+      "args": {
+        "team": "core",
+        "role": "lead"
+      },
+      "result": {
+        "employees": {
+          "id": "e2",
+          "full_name": "Grace Hopper"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "sources": {
+      "people": {
+        "status": "ok",
+        "data": [
+          {
+            "id": "e1",
+            "name": "Ada Lovelace",
+            "title": "Engineer"
+          },
+          {
+            "id": "e2",
+            "name": "Grace Hopper",
+            "title": "Lead"
+          }
+        ]
+      },
+      "leads": {
+        "status": "ok",
+        "data": [
+          {
+            "id": "e2",
+            "name": "Grace Hopper"
+          }
+        ]
+      }
+    },
+    "views": {
+      "team": {
+        "data": {
+          "rows": [
+            {
+              "id": "e1",
+              "name": "Ada Lovelace",
+              "title": "Engineer"
+            },
+            {
+              "id": "e2",
+              "name": "Grace Hopper",
+              "title": "Lead"
+            }
+          ],
+          "count": 2,
+          "leads": [
+            {
+              "id": "e2",
+              "name": "Grace Hopper"
+            }
+          ]
+        }
+      }
+    },
+    "render": {
+      "team": {
+        "root": "s",
+        "nodes": {
+          "s": {
+            "type": "Stack",
+            "props": {
+              "gap": "lg"
+            },
+            "children": [
+              "count",
+              "table"
+            ]
+          },
+          "count": {
+            "type": "Stat",
+            "props": {
+              "label": "Members",
+              "value": 2,
+              "hint": "Core team"
+            }
+          },
+          "table": {
+            "type": "DataTable",
+            "props": {
+              "rows": [
+                {
+                  "id": "e1",
+                  "name": "Ada Lovelace",
+                  "title": "Engineer"
+                },
+                {
+                  "id": "e2",
+                  "name": "Grace Hopper",
+                  "title": "Lead"
+                }
+              ],
+              "rowKey": "id"
+            },
+            "children": [
+              "c1"
+            ],
+            "action": {
+              "name": "intent",
+              "params": {
+                "id": "person-details",
+                "prompt": "Show this person's details"
+              }
+            }
+          },
+          "c1": {
+            "type": "DataColumn",
+            "props": {
+              "header": "Name",
+              "field": "name",
+              "subField": "title"
+            }
+          }
+        }
+      }
+    },
+    "unusedToolCalls": []
+  }
+}
