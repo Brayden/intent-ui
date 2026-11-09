@@ -5,7 +5,7 @@
 | **Status** | Draft — IAP v0.1, open for review |
 | **Author** | Brayden Wilmoth |
 | **Created** | 2026-11-07 |
-| **Last updated** | 2026-11-07 (rev 2: aligned with the reference implementation; schemas, change format and conformance suite published) |
+| **Last updated** | 2026-11-07 |
 | **Builds on** | [RFC 0001](0001-continuous-generative-ui.md), [RFC 0002](0002-spec-format-v0.md), ADRs [0001](../decisions/0001-spec-is-source-of-truth.md), [0003](../decisions/0003-template-library-and-reuse.md), [0008](../decisions/0008-persistence-data-layer-and-compose.md), [0011](../decisions/0011-generated-pages-and-routes.md)–[0015](../decisions/0015-connection-access-levels.md) |
 | **Artifacts** | [JSON Schemas](../spec/schema/), [Kumo catalog](../spec/catalogs/kumo-2.17.json), [conformance suite](../spec/conformance/) — see [docs/spec](../spec/README.md) |
 

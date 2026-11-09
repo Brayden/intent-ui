@@ -22,11 +22,16 @@ function firstForm(block: Block, ids: string[] = []): string | null {
   return null;
 }
 
+function isDialogAction(block: Block, id: string): boolean {
+  const node = block.nodes[id];
+  return node !== undefined && !isHtmlNode(node) && node.type === "DialogAction";
+}
+
 /** The dialog's DialogAction child (if visible) and its optional secondary MenuItem. */
 function dialogAction(block: Block, ids: string[] = [], scope: Scope) {
   const id = ids.find((child) => {
     const node = block.nodes[child];
-    return node && !isHtmlNode(node) && node.type === "DialogAction" && isVisible(node.visible, (path) => resolvePath(path, scope));
+    return isDialogAction(block, child) && isVisible(node?.visible, (path) => resolvePath(path, scope));
   });
   const node = id ? block.nodes[id] : undefined;
   if (!id || !node || isHtmlNode(node)) return null;
@@ -132,7 +137,8 @@ export function DialogComposite({ nodeId, node, props, scope, renderNode }: Cata
         <LayerDialog.Body>
           <DialogFooterContext.Provider value={footer}>
             <div className="flex flex-col gap-4">
-              {node.children?.map((id) => renderNode(id, scope))}
+              {/* DialogAction children render in the footer (below), never in the body. */}
+              {node.children?.filter((id) => !isDialogAction(block, id)).map((id) => renderNode(id, scope))}
               {error && <Text variant="error">{error}</Text>}
             </div>
           </DialogFooterContext.Provider>

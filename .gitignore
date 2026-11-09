@@ -15,3 +15,6 @@ worker-configuration.d.ts
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# Source recordings (too large for Workers assets and GitHub); deploy the compressed public/demo.mp4
+site/media/

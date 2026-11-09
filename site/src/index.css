@@ -1,0 +1,31 @@
+/* Kumo setup — order matters: @source, then Kumo styles, then Tailwind. */
+@source "../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
+@import "@cloudflare/kumo/styles/tailwind";
+@import "tailwindcss";
+
+:root {
+  color-scheme: light dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--color-kumo-canvas);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  isolation: isolate;
+}
+
+/*
+ * The frame: content sits in a bordered column; the space outside it, and the bands between
+ * sections, are cross-hatched with the line color so the structure reads in both themes.
+ */
+.hatch {
+  background-image: repeating-linear-gradient(-45deg, var(--color-kumo-line) 0 1px, transparent 1px 8px);
+}

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Intent UI: interfaces that build themselves around what people ask for, and stay that way. Read the Intents and Persistence RFC." />
+    <title>Intent UI</title>
+    <script>
+      // Kumo's dark styles key off data-mode and color-scheme. Use the visitor's choice if they
+      // made one (the header toggle), else follow the OS setting.
+      (function () {
+        var query = window.matchMedia("(prefers-color-scheme: dark)");
+        var stored = null;
+        try { stored = localStorage.getItem("theme"); } catch (e) {}
+        var apply = function (mode) {
+          document.documentElement.dataset.mode = mode;
+          document.documentElement.style.colorScheme = mode;
+        };
+        apply(stored === "light" || stored === "dark" ? stored : query.matches ? "dark" : "light");
+        query.addEventListener("change", function () {
+          var chosen = null;
+          try { chosen = localStorage.getItem("theme"); } catch (e) {}
+          if (!chosen) apply(query.matches ? "dark" : "light");
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

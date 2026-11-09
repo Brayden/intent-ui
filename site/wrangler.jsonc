@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "intent-ui-site",
+  "account_id": "448b660e519f2aa8f8fbcb5cb6ff98af",
+  "compatibility_date": "2026-11-01",
+  // Serves media with HTTP Range support so videos can be scrubbed (see worker/index.ts).
+  "main": "worker/index.ts",
+  "assets": {
+    "binding": "ASSETS",
+    // The built React app; client-side routes (/, /rfc) fall back to index.html.
+    "not_found_handling": "single-page-application",
+    // Only media goes through the Worker; everything else is served directly.
+    "run_worker_first": ["/*.mp4", "/*.webm"]
+  }
+}
