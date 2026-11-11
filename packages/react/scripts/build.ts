@@ -68,4 +68,13 @@ const compiler = await compile(input, {
 await Bun.write(`${pkg}/dist/styles.css`, compiler.build([...candidates]));
 
 await $`${root}/node_modules/.bin/tsc -p ${pkg}/tsconfig.build.json`.cwd(root);
+
+// React 18's types reject components whose return type is React 19's wider ReactNode (bigint,
+// Promise, …). Exported components must declare a JSX return type so the types work with both.
+for (const file of new Bun.Glob("**/*.d.ts").scanSync(`${pkg}/dist/types/packages/react/src`)) {
+  const text = readFileSync(`${pkg}/dist/types/packages/react/src/${file}`, "utf8");
+  for (const [line] of text.matchAll(/^export declare function [A-Z].*$/gm)) {
+    if (/\bbigint\b|Promise</.test(line)) throw new Error(`${file}: a component returns ReactNode, which React 18 can't use as JSX. Declare a ReactElement return type:\n${line.slice(0, 200)}`);
+  }
+}
 console.log(`built ${result.outputs.map((o) => o.path.slice(root.length + 1)).join(", ")}, styles.css + types`);

@@ -9,7 +9,7 @@ part of your own pages to change it, using your components and your data. Three 
 | [`@intent-ui/server`](server/) | The API as a Cloudflare Worker handler (generation, data sources, connections, customizations), stored in Durable Objects |
 | [`@intent-ui/build-plugin`](build-plugin/) | Tags your JSX elements with stable ids so any part of a page can be customized. Vite, webpack, Turbopack, Next.js |
 
-Requirements: React 19, a Cloudflare Worker (with `nodejs_compat`), and an Anthropic API key.
+Requirements: React 18 or 19, a Cloudflare Worker (with `nodejs_compat`), and an Anthropic API key.
 
 ## 1. Server: mount the handler in your Worker
 

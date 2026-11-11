@@ -1,7 +1,7 @@
 import { Button } from "@cloudflare/kumo/components/button";
 import { Empty } from "@cloudflare/kumo/components/empty";
 import { Loader } from "@cloudflare/kumo/components/loader";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
 import { AppPathsContext, type AppPaths } from "../../../src/app/paths";
 import { createWorkspace, WorkspacePage } from "../../../src/features/workspace";
 import { useIntentUI } from "./context";
@@ -43,7 +43,7 @@ function useLocationUnder(basePath: string): { pageId?: string; params: Record<s
  * brings the whole Intent UI experience scoped to that route: ⌘K to describe and build, right-click
  * to change, intents that generate on first click, and pages of its own under `basePath`.
  */
-export function GeneratedPage({ basePath, id, onCreate, title = "Untitled page", children }: GeneratedPageProps) {
+export function GeneratedPage({ basePath, id, onCreate, title = "Untitled page", children }: GeneratedPageProps): ReactElement {
   const { mutationsEnabled, setMutationsEnabled } = useIntentUI();
   const base = basePath.replace(/\/+$/, "");
   const { pageId, params } = useLocationUnder(base);
@@ -77,15 +77,17 @@ export function GeneratedPage({ basePath, id, onCreate, title = "Untitled page",
 
   if (!mutationsEnabled) {
     return (
-      children ?? (
-        <div className="px-4 py-24">
-          <Empty
-            title="Customizations are off"
-            description="This page was generated with Intent UI. Turn customizations back on to see it."
-            contents={<Button onClick={() => setMutationsEnabled(true)}>Turn on</Button>}
-          />
-        </div>
-      )
+      <>
+        {children ?? (
+          <div className="px-4 py-24">
+            <Empty
+              title="Customizations are off"
+              description="This page was generated with Intent UI. Turn customizations back on to see it."
+              contents={<Button onClick={() => setMutationsEnabled(true)}>Turn on</Button>}
+            />
+          </div>
+        )}
+      </>
     );
   }
   if (error) return <Empty title="Couldn't create this page" description={error} />;
