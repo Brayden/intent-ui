@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import type { Template } from "../../shared/api";
 import type { BlockView, Workspace } from "../../shared/spec";
-import type { Env } from "../env";
+import type { Bindings } from "../env";
 
 const MAX_VERSIONS = 200;
 
@@ -23,10 +23,10 @@ export type SaveResult = { ok: true; version: number } | { ok: false; version: n
  * and view snapshots, in the Durable Object's SQLite storage. Validation happens in the Worker
  * before anything reaches here. Specs cross the RPC boundary as JSON strings.
  */
-export class WorkspaceStore extends DurableObject<Env> {
+export class WorkspaceStore extends DurableObject<Bindings> {
   private readonly sql: SqlStorage;
 
-  constructor(ctx: DurableObjectState, env: Env) {
+  constructor(ctx: DurableObjectState, env: Bindings) {
     super(ctx, env);
     this.sql = ctx.storage.sql;
     this.sql.exec(`

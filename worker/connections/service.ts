@@ -41,11 +41,11 @@ export type StoredConnection = {
   policy: Record<string, ToolPolicy>;
 };
 
-type Pending = { id: string; verifier: string; redirectUri: string };
+/** An OAuth sign-in in progress. `returnTo` is the page to send the user back to afterwards. */
+type Pending = { id: string; verifier: string; redirectUri: string; returnTo?: string };
 
 /** One user for now; becomes the signed-in user's id once identity lands. */
-const USER = "local";
-export const connectionsStore = (env: Env) => env.CONNECTIONS.get(env.CONNECTIONS.idFromName(USER));
+export const connectionsStore = (env: Env) => env.CONNECTIONS.get(env.CONNECTIONS.idFromName(env.user));
 
 export async function listStored(env: Env): Promise<StoredConnection[]> {
   return (await connectionsStore(env).list()).map((json) => JSON.parse(json) as StoredConnection);
@@ -106,7 +106,7 @@ export function requestedScopes(discovery: Discovery, access: Access): string | 
   return chosen.length > 0 ? chosen.join(" ") : undefined;
 }
 
-const redirectUriFor = (origin: string) => `${origin}/api/connections/oauth/callback`;
+const redirectUriFor = (env: Env, origin: string) => `${origin}${env.basePath}/connections/oauth/callback`;
 
 function idFor(name: string, taken: Set<string>): string {
   const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "connection";
@@ -116,7 +116,12 @@ function idFor(name: string, taken: Set<string>): string {
 }
 
 /** Adds (or, for a preset, reconnects) a connection. OAuth returns the URL to sign in at. */
-export async function createConnection(env: Env, request: CreateConnectionRequest, origin: string): Promise<{ connection: StoredConnection; authUrl?: string }> {
+export async function createConnection(
+  env: Env,
+  request: CreateConnectionRequest,
+  origin: string,
+  returnTo?: string,
+): Promise<{ connection: StoredConnection; authUrl?: string }> {
   const preset = PRESETS.find((candidate) => candidate.id === request.preset);
   if (request.preset && !preset) throw new HttpError(400, `Unknown preset "${request.preset}"`);
   const url = request.url ?? preset?.url;
@@ -148,7 +153,7 @@ export async function createConnection(env: Env, request: CreateConnectionReques
   };
 
   if (request.auth === "oauth") {
-    const authUrl = await startAuthorization(env, connection, origin);
+    const authUrl = await startAuthorization(env, connection, origin, returnTo);
     return { connection: await getStored(env, id), authUrl };
   }
   return { connection: await connect(env, connection) };
@@ -158,14 +163,14 @@ export async function createConnection(env: Env, request: CreateConnectionReques
  * Starts an OAuth sign-in: finds the authorization server (from the server's 401 hint or its
  * metadata), registers a client unless we have one, and returns the authorization URL.
  */
-export async function startAuthorization(env: Env, connection: StoredConnection, origin: string): Promise<string> {
+export async function startAuthorization(env: Env, connection: StoredConnection, origin: string, returnTo?: string): Promise<string> {
   let hint: string | undefined;
   try {
     await new McpClient({ url: connection.url, timeoutMs: 15_000 }).listTools();
   } catch (error) {
     if (error instanceof McpAuthError) hint = error.resourceMetadata;
   }
-  const redirectUri = redirectUriFor(origin);
+  const redirectUri = redirectUriFor(env, origin);
   const discovery = await discover(connection.url, hint);
   // A registered client is tied to its redirect URI: register again if the app's address changed.
   const reuse = connection.client && (connection.ownClient || connection.clientRedirectUri === redirectUri);
@@ -173,14 +178,14 @@ export async function startAuthorization(env: Env, connection: StoredConnection,
   const verifier = randomToken();
   const state = randomToken(16);
   await save(env, { ...connection, discovery, client, clientRedirectUri: connection.ownClient ? undefined : redirectUri, status: "needs_auth", error: undefined });
-  const pending: Pending = { id: connection.id, verifier, redirectUri };
+  const pending: Pending = { id: connection.id, verifier, redirectUri, returnTo };
   await connectionsStore(env).putPending(state, JSON.stringify(pending));
   const scope = requestedScopes(discovery, connection.access ?? "write");
   return authorizationUrl(discovery, client, { redirectUri, challenge: await pkceChallenge(verifier), state, scope });
 }
 
 /** Finishes a sign-in from the OAuth callback, then connects. */
-export async function completeAuthorization(env: Env, state: string, code: string): Promise<StoredConnection> {
+export async function completeAuthorization(env: Env, state: string, code: string): Promise<{ connection: StoredConnection; returnTo?: string }> {
   const json = await connectionsStore(env).takePending(state);
   if (!json) throw new HttpError(400, "This sign-in expired or was already used. Try connecting again.");
   const pending = JSON.parse(json) as Pending;
@@ -188,7 +193,7 @@ export async function completeAuthorization(env: Env, state: string, code: strin
   if (!connection.discovery || !connection.client) throw new HttpError(400, "Sign-in wasn't started for this connection");
   try {
     const tokens = await exchangeCode(connection.discovery, connection.client, { code, verifier: pending.verifier, redirectUri: pending.redirectUri });
-    return await connect(env, { ...connection, tokens });
+    return { connection: await connect(env, { ...connection, tokens }), returnTo: pending.returnTo };
   } catch (error) {
     await save(env, { ...connection, status: "error", error: (error as Error).message });
     throw error;
@@ -196,13 +201,13 @@ export async function completeAuthorization(env: Env, state: string, code: strin
 }
 
 /** Marks a pending sign-in as failed (the user declined, or the server returned an error). */
-export async function failAuthorization(env: Env, state: string, message: string): Promise<string | undefined> {
+export async function failAuthorization(env: Env, state: string, message: string): Promise<{ id: string; returnTo?: string } | undefined> {
   const json = await connectionsStore(env).takePending(state);
   if (!json) return undefined;
-  const { id } = JSON.parse(json) as Pending;
+  const { id, returnTo } = JSON.parse(json) as Pending;
   const connection = await getStored(env, id);
   await save(env, { ...connection, status: "needs_auth", error: message });
-  return id;
+  return { id, returnTo };
 }
 
 /** Headers for a call, refreshing an expiring OAuth token first. */

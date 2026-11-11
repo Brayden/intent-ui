@@ -11,9 +11,24 @@ export class ApiRequestError extends Error {
   }
 }
 
+let apiBase = "/api";
+
+/**
+ * Where the Intent UI server handler is mounted. The app uses "/api"; a host embedding the SDK may
+ * mount it elsewhere (e.g. "/intent-ui/api"). Callers keep writing "/api/..." paths.
+ */
+export function setApiBase(base: string): void {
+  apiBase = base.replace(/\/+$/, "");
+}
+
+/** Resolves an "/api/..." path against the configured base. */
+export function apiUrl(path: string): string {
+  return path.startsWith("/api") ? apiBase + path.slice("/api".length) : path;
+}
+
 /** JSON request to the Worker's /api. Throws `ApiRequestError` with the server's message. */
 export async function api<T>(method: "GET" | "POST" | "PUT" | "DELETE", path: string, body?: unknown): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(apiUrl(path), {
     method,
     headers: body === undefined ? undefined : { "content-type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),

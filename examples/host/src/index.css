@@ -1,0 +1,12 @@
+/* Kumo setup — order matters: @source, then Kumo styles, then Tailwind. */
+@source "../../../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
+/* The SDK's UI and the generated pages it renders (scaffold: both live in this repo). */
+@source "../../../packages";
+@source "../../../src";
+@import "@cloudflare/kumo/styles/tailwind";
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  background: var(--color-kumo-canvas);
+}

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "../..",
+    "outDir": "dist/types",
+    "types": ["@cloudflare/workers-types"]
+  },
+  "files": ["src/index.ts", "../../worker/raw.d.ts", "../../worker/node-async-hooks.d.ts"]
+}

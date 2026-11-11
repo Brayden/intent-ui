@@ -30,6 +30,11 @@ export function BlockProvider({ runtime, children }: { runtime: BlockRuntime; ch
   return <BlockContext.Provider value={runtime}>{children}</BlockContext.Provider>;
 }
 
+/** The action dispatcher, or null outside `DispatchProvider` (e.g. a static preview). */
+export function useOptionalDispatch(): ActionDispatcher | null {
+  return useContext(DispatchContext);
+}
+
 /** Returns the action dispatcher. Must be rendered inside `DispatchProvider`. */
 export function useDispatch(): ActionDispatcher {
   const dispatch = useContext(DispatchContext);

@@ -1,0 +1,34 @@
+{
+  "name": "@intent-ui/react",
+  "version": "0.1.0",
+  "description": "Embed Intent UI in an existing React app: generated pages, right-click customization of your own pages, protected areas, component bindings, settings and a master switch.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/packages/react/src/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "BINDINGS.md"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "scripts": {
+    "build": "NODE_ENV=production bun scripts/build.ts"
+  },
+  "dependencies": {
+    "jsonata": "^2.2.2",
+    "zod": "^4.3.6"
+  },
+  "peerDependencies": {
+    "@cloudflare/kumo": "^2.17.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

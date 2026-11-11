@@ -25,10 +25,17 @@ import { checkWorkspace, parseTemplate } from "../workspaces/validate";
 export type Params = Record<string, string>;
 
 export const store = (env: Env, id: string) => env.WORKSPACES.get(env.WORKSPACES.idFromName(id));
-const directory = (env: Env) => env.DIRECTORY.get(env.DIRECTORY.idFromName("directory"));
+/** The user's directory ("local", the standalone app's user, keeps the original instance). */
+const directory = (env: Env) => env.DIRECTORY.get(env.DIRECTORY.idFromName(env.user === "local" ? "directory" : `directory:${env.user}`));
 
-/** Loads a stored workspace or throws a 404. */
+/** Throws a 404 unless the current user owns the workspace (indistinguishable from not existing). */
+export async function assertOwns(env: Env, id: string): Promise<void> {
+  if (!(await directory(env).has(id))) throw new HttpError(404, `No workspace "${id}"`);
+}
+
+/** Loads a stored workspace the current user owns, or throws a 404. */
 export async function loadOrThrow(env: Env, id: string): Promise<StoredWorkspace> {
+  await assertOwns(env, id);
   const json = await store(env, id).load();
   if (!json) throw new HttpError(404, `No workspace "${id}"`);
   return JSON.parse(json) as StoredWorkspace;
@@ -98,6 +105,7 @@ export async function putTemplate(request: Request, env: Env, { id = "" }: Param
 
 /** DELETE /api/workspaces/:id */
 export async function deleteWorkspace(_request: Request, env: Env, { id = "" }: Params): Promise<Response> {
+  await assertOwns(env, id);
   await store(env, id).destroy();
   await directory(env).remove(id);
   return new Response(null, { status: 204 });

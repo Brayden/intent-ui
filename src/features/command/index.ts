@@ -1,2 +1,2 @@
 export { CommandMenu } from "./CommandMenu";
-export { SHORTCUT_LABEL, useCommandShortcut } from "./useCommandShortcut";
+export { CommandShortcutProvider, OPEN_COMMAND_MENU_EVENT, useCommandShortcut, useShortcut, type ShortcutSetting } from "./shortcut";

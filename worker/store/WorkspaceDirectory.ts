@@ -1,13 +1,13 @@
 import { DurableObject } from "cloudflare:workers";
-import type { Env } from "../env";
+import type { Bindings } from "../env";
 
 export type WorkspaceSummary = { id: string; title: string; createdAt: string; updatedAt: string };
 
-/** Lists workspaces (one instance for now; per user once identity lands). */
-export class WorkspaceDirectory extends DurableObject<Env> {
+/** Lists one user's workspaces (one instance per user). */
+export class WorkspaceDirectory extends DurableObject<Bindings> {
   private readonly sql: SqlStorage;
 
-  constructor(ctx: DurableObjectState, env: Env) {
+  constructor(ctx: DurableObjectState, env: Bindings) {
     super(ctx, env);
     this.sql = ctx.storage.sql;
     this.sql.exec("CREATE TABLE IF NOT EXISTS workspaces (id TEXT PRIMARY KEY, title TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)");
@@ -18,6 +18,11 @@ export class WorkspaceDirectory extends DurableObject<Env> {
       .exec<{ id: string; title: string; created_at: string; updated_at: string }>("SELECT * FROM workspaces ORDER BY updated_at DESC")
       .toArray()
       .map((row) => ({ id: row.id, title: row.title, createdAt: row.created_at, updatedAt: row.updated_at }));
+  }
+
+  /** Whether this user owns the workspace: the check before anyone opens, saves or deletes it. */
+  has(id: string): boolean {
+    return this.sql.exec("SELECT 1 FROM workspaces WHERE id = ?", id).toArray().length > 0;
   }
 
   touch(id: string, title: string): void {

@@ -1,0 +1,25 @@
+{
+  "name": "@intent-ui/build-plugin",
+  "version": "0.1.0",
+  "description": "Tags every JSX element with a stable id so Intent UI can customize any part of a page. Vite, webpack, Turbopack and Next.js.",
+  "type": "module",
+  "exports": {
+    "./vite": { "types": "./dist/types/vite.d.ts", "import": "./dist/vite.js" },
+    "./webpack": { "types": "./dist/types/webpack.d.ts", "import": "./dist/webpack.js" },
+    "./next": { "types": "./dist/types/next.d.ts", "import": "./dist/next.js" },
+    "./core": { "types": "./dist/types/core.d.ts", "import": "./dist/core.js" }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "bun scripts/build.ts"
+  },
+  "dependencies": {
+    "@babel/core": "^7.29.0"
+  },
+  "peerDependencies": {
+    "vite": ">=6"
+  },
+  "peerDependenciesMeta": {
+    "vite": { "optional": true }
+  }
+}

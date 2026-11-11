@@ -79,7 +79,7 @@ shared/
   spec/               workspace spec schemas (zod) and pure spec operations
   catalog/            component catalog: props, validation, model-facing descriptions
   api/                request/response contracts between app and Worker
-worker/
+worker/               (handler.ts is the API as a mountable handler; index.ts the standalone app's Worker)
   routes/             /api/workspaces/*, /api/intents/*, /api/tools/call
   store/              Durable Objects: WorkspaceStore (one per workspace), WorkspaceDirectory
   data/               sources → JSONata → block views
@@ -94,5 +94,8 @@ docs/                 RFCs and decision records (start with docs/README.md); doc
                       IAP JSON Schemas, Kumo catalog and conformance suite
 scripts/spec/         schema generator and conformance runner
 site/                 the public RFC website (its own package)
+packages/             SDK for embedding in Cloudflare-hosted React apps: @intent-ui/react, @intent-ui/server,
+                      @intent-ui/build-plugin (see packages/README.md; `npm run sdk:build`)
+examples/host/        a sample host dashboard using the SDK (`npm run dev:example`)
 skills/               Project skills Claude follows while building (see CLAUDE.md)
 ```

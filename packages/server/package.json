@@ -1,0 +1,16 @@
+{
+  "name": "@intent-ui/server",
+  "version": "0.1.0",
+  "description": "Intent UI's API as a Cloudflare Worker handler: generation, data sources, connections and customizations, stored in Durable Objects.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/packages/server/src/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "bun scripts/build.ts"
+  }
+}

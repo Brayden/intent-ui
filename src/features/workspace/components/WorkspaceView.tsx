@@ -4,10 +4,11 @@ import { Empty } from "@cloudflare/kumo/components/empty";
 import { Text } from "@cloudflare/kumo/components/text";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { ComposeResponse, GeneratePageResponse, Template, WorkspaceResponse } from "../../../../shared/api";
-import { missingParams as missingRouteParams, pagePath, pickRoute, routeDependentBlocks, routeFromItem, type Block } from "../../../../shared/spec";
+import { missingParams as missingRouteParams, pickRoute, routeDependentBlocks, routeFromItem, type Block } from "../../../../shared/spec";
+import { useAppPaths } from "../../../app/paths";
 import { navigate } from "../../../app/router";
 import { ChangePrompt, useAmend } from "../../amend";
-import { CommandMenu, SHORTCUT_LABEL, useCommandShortcut } from "../../command";
+import { CommandMenu, useCommandShortcut, useShortcut } from "../../command";
 import { blockContext, OverlayHost, useIntentRuntime } from "../../intents";
 import { DispatchProvider, injectSpecCss, PageRenderer, RouteValuesProvider, TargetProvider } from "../../renderer";
 import { composePage, generatePage, putTemplate } from "../api";
@@ -27,6 +28,8 @@ import { shareViews } from "../lib/shareViews";
  */
 export function WorkspaceView({ stored, pageId: requestedPageId, params }: { stored: WorkspaceResponse; pageId?: string; params: Record<string, string> }) {
   const toasts = useToasts();
+  const paths = useAppPaths();
+  const shortcut = useShortcut().label;
   const { workspace, replaceBlockTree, setBlockUi, applyPage, applyCompose, applyBlockDataChange, replaceSource, addPage, setPageParams } =
     useWorkspace(stored.spec);
   const homePageId = Object.keys(workspace.pages)[0] ?? "home";
@@ -63,8 +66,8 @@ export function WorkspaceView({ stored, pageId: requestedPageId, params }: { sto
   );
 
   const goTo = useCallback(
-    (target: string, values: Record<string, string> = {}) => navigate(pagePath(stored.id, target, values)),
-    [stored.id],
+    (target: string, values: Record<string, string> = {}) => navigate(paths.page(stored.id, target, values)),
+    [stored.id, paths],
   );
 
   /** Sets a route param of the current page (a search box, a filter): the URL changes, data follows (ADR 0013). */
@@ -73,9 +76,9 @@ export function WorkspaceView({ stored, pageId: requestedPageId, params }: { sto
       const next = { ...route };
       if (value === undefined || value === null || String(value).trim() === "") delete next[name];
       else next[name] = String(value);
-      navigate(pagePath(stored.id, pageId, next), { replace, scroll: false });
+      navigate(paths.page(stored.id, pageId, next), { replace, scroll: false });
     },
-    [route, stored.id, pageId],
+    [route, stored.id, pageId, paths],
   );
 
   /** Opens the page an intent leads to: straight there if it exists, else generated first (ADR 0011). */
@@ -172,7 +175,10 @@ export function WorkspaceView({ stored, pageId: requestedPageId, params }: { sto
   const isEmpty = !Object.values(workspace.blocks).some((block) => block.page === pageId);
   // A blank workspace opens straight into the menu: describing what to build is the first step.
   const [menuOpen, setMenuOpen] = useState(isEmpty);
-  useCommandShortcut(useCallback(() => setMenuOpen((open) => !open), []));
+  useCommandShortcut(
+    useCallback(() => setMenuOpen((open) => !open), []),
+    useCallback(() => setMenuOpen(true), []),
+  );
   const onRefresh = useCallback(() => void flush().then(refresh), [flush, refresh]);
 
   const commandMenu = (
@@ -219,8 +225,8 @@ export function WorkspaceView({ stored, pageId: requestedPageId, params }: { sto
                 What do you want to build?
               </Text>
               <Text variant="secondary">
-                Press {SHORTCUT_LABEL} and describe it, for example “Show me all the members of my team with their open pull
-                requests.” Right-click anything afterwards to change it.
+                {shortcut ? `Press ${shortcut} and describe it` : "Describe it"}, for example “Show me all the members of my team
+                with their open pull requests.” Right-click anything afterwards to change it.
               </Text>
               <Button variant="primary" className="mt-2" onClick={() => setMenuOpen(true)}>
                 Describe it

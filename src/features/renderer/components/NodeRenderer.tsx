@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { isHtmlNode, isVisible, type ComponentNode, type HtmlNode } from "../../../../shared/spec";
 import { catalog } from "../catalog";
-import { useBlock } from "../context";
+import { useComponentBindings } from "../bindings";
+import { useBlock, useOptionalDispatch } from "../context";
 import { resolvePath, resolveProps, resolveValue, type Scope } from "../lib/resolve";
 import { useTargetHandler } from "../targeting";
 import { HtmlElement } from "./HtmlElement";
@@ -28,8 +29,12 @@ function BlockHtml({ id, node, scope }: NodeProps & { node: HtmlNode }) {
 /** A catalog component: props resolved and validated, then rendered by its implementation. */
 function BlockComponent({ id, node, scope }: NodeProps & { node: ComponentNode }) {
   const onContextMenu = useTargetHandler(id, scope);
+  const bindings = useComponentBindings();
+  const dispatch = useOptionalDispatch();
+  const { block } = useBlock();
   const entry = catalog[node.type];
-  if (!entry?.component) return <NodeError id={id} message={`Unknown component "${node.type}"`} />;
+  const implementation = bindings[node.type] ?? entry?.component;
+  if (!entry || !implementation) return <NodeError id={id} message={`Unknown component "${node.type}"`} />;
   if (entry.spec.parent) return null; // rendered by its parent (e.g. DataColumn inside DataTable)
 
   const parsed = entry.spec.props.safeParse(resolveProps(node.props, scope));
@@ -38,8 +43,20 @@ function BlockComponent({ id, node, scope }: NodeProps & { node: ComponentNode }
   const renderNode = (childId: string, childScope: Scope): ReactNode => (
     <NodeRenderer key={childId} id={childId} scope={childScope} />
   );
-  const Component = entry.component;
-  const rendered = <Component nodeId={id} node={node} props={parsed.data} scope={scope} renderNode={renderNode} />;
+  const childNodes = (node.children ?? []).flatMap((childId) => {
+    const child = block.nodes[childId];
+    if (!child || isHtmlNode(child)) return [];
+    const spec = catalog[child.type]?.spec;
+    const childProps = spec?.props.safeParse(resolveProps(child.props, scope));
+    return childProps?.success ? [{ id: childId, type: child.type, props: childProps.data as Record<string, unknown>, children: child.children ?? [] }] : [];
+  });
+  const fireAction = async (item?: unknown) => {
+    if (node.action && dispatch) await dispatch(node.action, { blockId: block.id, nodeId: id, scope: item === undefined ? scope : { ...scope, item } });
+  };
+  const Component = implementation;
+  const rendered = (
+    <Component nodeId={id} node={node} props={parsed.data} scope={scope} renderNode={renderNode} childNodes={childNodes} fireAction={fireAction} />
+  );
   // `contents` adds no box, so layout is unchanged; it only catches right-clicks for targeting.
   return onContextMenu ? (
     <span className="contents" onContextMenu={onContextMenu}>

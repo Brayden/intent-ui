@@ -53,7 +53,17 @@ const MAX_TURNS = MAX_ATTEMPTS + MAX_OBSERVATIONS + MAX_DESCRIBES;
  * Tool choice is `auto` because forced choice isn't supported by every model (e.g. Opus 5.5);
  * a message with no tool call counts as a repairable failure.
  */
+/**
+ * The Messages API requires every client tool's input_schema to be `type: "object"` at the top
+ * level (a Zod union compiles to a bare oneOf). Caught here with a clear message instead of a 400.
+ */
+export function toolSchemaIssues(tools: ToolDefinition[]): string[] {
+  return tools.filter((tool) => tool.input_schema.type !== "object").map((tool) => `Tool "${tool.name}": input_schema must be a JSON object schema (type: "object") at the top level`);
+}
+
 export async function runToolLoop<T>(env: Env, options: ToolLoopOptions<T>): Promise<{ value: T; attempts: number }> {
+  const schemaIssues = toolSchemaIssues(options.tools);
+  if (schemaIssues.length > 0) throw new HttpError(500, "Invalid tool definition", schemaIssues);
   const messages: Message[] = [{ role: "user", content: options.prompt }];
   let lastIssues: string[] = [];
   let attempts = 0;

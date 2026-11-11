@@ -20,6 +20,9 @@ type Registry = { connections: Connection[] };
 const DEMO: Connection[] = [acmeHr];
 const BUILTINS: Connection[] = [web, ...DEMO];
 
+/** Built-ins for this request: the web, demo data (standalone app only), and the host's own tools. */
+const builtins = (env: Env): Connection[] => [web, ...(env.demoData ? DEMO : []), ...env.hostTools];
+
 const requestRegistry = new AsyncLocalStorage<Registry>();
 const current = (): Registry => requestRegistry.getStore() ?? { connections: BUILTINS };
 
@@ -53,7 +56,7 @@ export async function loadRegistry(env: Env): Promise<Registry> {
   const stored = await listStored(env);
   const real = stored.filter((connection) => connection.status === "connected").map((connection) => governed(env, connection));
   const realIds = new Set(real.map((connection) => connection.id));
-  return { connections: [...BUILTINS.filter((connection) => !realIds.has(connection.id)), ...real] };
+  return { connections: [...builtins(env).filter((connection) => !realIds.has(connection.id)), ...real] };
 }
 
 /** Runs `work` with `registry` as the request's connections. */
@@ -88,9 +91,9 @@ export function findTool(connectionId: string, toolName: string): { connection: 
 }
 
 /** Built-in connections as the connections page shows them; demo ones note what replaced them. */
-export function builtinSummaries(stored: StoredConnection[]): ConnectionSummary[] {
+export function builtinSummaries(env: Env, stored: StoredConnection[]): ConnectionSummary[] {
   const connected = new Set(stored.filter((connection) => connection.status === "connected").map((connection) => connection.id));
-  return BUILTINS.map((connection) => ({
+  return builtins(env).map((connection) => ({
     id: connection.id,
     name: connection.name,
     url: "",

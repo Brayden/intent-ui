@@ -4,6 +4,7 @@ import { ArrowClockwiseIcon, FileIcon, FolderIcon, HouseIcon, MagicWandIcon, Plu
 import { useEffect, useMemo, useState } from "react";
 import type { WorkspaceSummary } from "../../../shared/api";
 import type { Page } from "../../../shared/spec";
+import { useAppPaths } from "../../app/paths";
 import { navigate } from "../../app/router";
 import { createWorkspace, listWorkspaces } from "../workspace/api";
 import { buildCommandGroups, type Command, type CommandGroup } from "./commands";
@@ -31,9 +32,11 @@ type CommandMenuProps = {
 export function CommandMenu({ open, onOpenChange, workspaceId, pages, onOpenPage, onGenerate, onRefresh, placeholder, status }: CommandMenuProps) {
   const [query, setQuery] = useState("");
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[] | null>(null);
+  // Embedded in a host (no home), the menu is about this page only: no workspace switching.
+  const { home } = useAppPaths();
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || home === null) return;
     let cancelled = false;
     listWorkspaces()
       .then((list) => !cancelled && setWorkspaces(list))
@@ -50,13 +53,17 @@ export function CommandMenu({ open, onOpenChange, workspaceId, pages, onOpenPage
     };
     const actions: Command[] = [
       { id: "refresh", title: "Refresh data", description: "Re-run this page's data sources", icon: <ArrowClockwiseIcon />, run: close(onRefresh) },
-      {
-        id: "new",
-        title: "New blank workspace",
-        icon: <PlusIcon />,
-        run: close(() => void createWorkspace({ title: "Untitled workspace" }).then(({ id }) => navigate(`/w/${id}`))),
-      },
-      { id: "home", title: "All workspaces", description: "Manage and delete workspaces", icon: <HouseIcon />, run: close(() => navigate("/")) },
+      ...(home === null
+        ? []
+        : [
+            {
+              id: "new",
+              title: "New blank workspace",
+              icon: <PlusIcon />,
+              run: close(() => void createWorkspace({ title: "Untitled workspace" }).then(({ id }) => navigate(`/w/${id}`))),
+            },
+            { id: "home", title: "All workspaces", description: "Manage and delete workspaces", icon: <HouseIcon />, run: close(() => navigate(home)) },
+          ]),
     ];
     return buildCommandGroups({
       query,
@@ -77,7 +84,7 @@ export function CommandMenu({ open, onOpenChange, workspaceId, pages, onOpenPage
       openWorkspace: (workspace) => close(() => navigate(`/w/${workspace.id}`))(),
       workspaceIcon: <FolderIcon />,
     });
-  }, [query, workspaces, workspaceId, pages, onOpenPage, onGenerate, onRefresh, onOpenChange]);
+  }, [query, workspaces, workspaceId, pages, onOpenPage, onGenerate, onRefresh, onOpenChange, home]);
 
   return (
     <CommandPalette.Root

@@ -24,17 +24,32 @@ import type { Params } from "./workspaces";
 
 const originOf = (request: Request) => new URL(request.url).origin;
 
+/**
+ * The page the user started from (to return to after an OAuth sign-in): the Referer, if it's on
+ * this origin, so a host app's page gets the user back rather than the standalone app's home.
+ */
+function returnToOf(request: Request): string | undefined {
+  const referer = request.headers.get("referer");
+  if (!referer) return undefined;
+  try {
+    const url = new URL(referer);
+    return url.origin === originOf(request) ? `${url.pathname}${url.search}` : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** GET /api/connections — the user's connections, then the built-ins. */
 export async function listConnections(_request: Request, env: Env): Promise<Response> {
   const stored = await listStored(env);
-  const body: ConnectionSummary[] = [...stored.map(summarize), ...builtinSummaries(stored)];
+  const body: ConnectionSummary[] = [...stored.map(summarize), ...builtinSummaries(env, stored)];
   return Response.json(body);
 }
 
 /** POST /api/connections — add (or reconnect) one; OAuth answers with the URL to sign in at. */
 export async function addConnection(request: Request, env: Env): Promise<Response> {
   const body = await readJson(request, CreateConnectionRequestSchema);
-  const { connection, authUrl } = await createConnection(env, body, originOf(request));
+  const { connection, authUrl } = await createConnection(env, body, originOf(request), returnToOf(request));
   const response: CreateConnectionResponse = { connection: summarize(connection), authUrl };
   return Response.json(response, { status: 201 });
 }
@@ -43,7 +58,7 @@ export async function addConnection(request: Request, env: Env): Promise<Respons
 export async function reauthorize(request: Request, env: Env, { id = "" }: Params): Promise<Response> {
   const connection = await getStored(env, id);
   if (connection.auth !== "oauth") throw new HttpError(400, `${connection.name} uses a token: reconnect it with a new one`);
-  return Response.json({ authUrl: await startAuthorization(env, connection, originOf(request)) });
+  return Response.json({ authUrl: await startAuthorization(env, connection, originOf(request), returnToOf(request)) });
 }
 
 /** GET /api/connections/oauth/callback — where the authorization server sends the user back. */
@@ -51,15 +66,20 @@ export async function oauthCallback(request: Request, env: Env): Promise<Respons
   const url = new URL(request.url);
   const state = url.searchParams.get("state") ?? "";
   const code = url.searchParams.get("code");
-  const back = (params: Record<string, string>) => Response.redirect(`${url.origin}/?${new URLSearchParams(params)}`, 302);
+  // Back to the page the sign-in started from, with the result in the query (the settings UI shows it).
+  const back = (params: Record<string, string>, returnTo = "/") => {
+    const target = new URL(returnTo, url.origin);
+    for (const [key, value] of Object.entries(params)) target.searchParams.set(key, value);
+    return Response.redirect(target.toString(), 302);
+  };
   if (!code) {
     const message = url.searchParams.get("error_description") ?? url.searchParams.get("error") ?? "Sign-in was cancelled";
-    const id = await failAuthorization(env, state, message);
-    return back({ connection: id ?? "", status: "error", message });
+    const failed = await failAuthorization(env, state, message);
+    return back({ connection: failed?.id ?? "", status: "error", message }, failed?.returnTo);
   }
   try {
-    const connection = await completeAuthorization(env, state, code);
-    return back({ connection: connection.id, status: connection.status, message: connection.error ?? "" });
+    const { connection, returnTo } = await completeAuthorization(env, state, code);
+    return back({ connection: connection.id, status: connection.status, message: connection.error ?? "" }, returnTo);
   } catch (error) {
     return back({ status: "error", message: (error as Error).message });
   }

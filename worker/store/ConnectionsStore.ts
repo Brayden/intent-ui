@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import type { Env } from "../env";
+import type { Bindings } from "../env";
 
 const PENDING_TTL_MS = 15 * 60 * 1000;
 const MAX_ACTIVITY = 2000;
@@ -10,10 +10,10 @@ const MAX_ACTIVITY = 2000;
  * log. Credentials stay here and in the Worker; they never reach the browser or the model.
  * Logic lives in `connections/service.ts`; this is storage. Values cross RPC as JSON strings.
  */
-export class ConnectionsStore extends DurableObject<Env> {
+export class ConnectionsStore extends DurableObject<Bindings> {
   private readonly sql: SqlStorage;
 
-  constructor(ctx: DurableObjectState, env: Env) {
+  constructor(ctx: DurableObjectState, env: Bindings) {
     super(ctx, env);
     this.sql = ctx.storage.sql;
     this.sql.exec(`

@@ -12,3 +12,4 @@ export * from "./layout";
 export * from "./blockChrome";
 export { lintDialogActions, validateBlockTree } from "./validate";
 export { describeCatalog } from "./describe";
+export type { CatalogProps, CatalogType } from "./props";

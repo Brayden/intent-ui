@@ -5,3 +5,7 @@ export { catalog } from "./catalog";
 export { injectSpecCss } from "./lib/specStyles";
 export { TargetProvider, type ElementTarget } from "./targeting";
 export { resolveDeep, resolveParams, resolveValue, type Scope } from "./lib/resolve";
+export { ComponentBindingsProvider } from "./bindings";
+export type { CatalogComponent, CatalogComponentProps } from "./catalog";
+export type { ChildNode } from "./catalog/types";
+export { formatValue } from "./lib/format";

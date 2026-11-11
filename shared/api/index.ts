@@ -5,3 +5,4 @@ export * from "./workspaces";
 export * from "./research";
 export * from "./connections";
 export * from "./document";
+export * from "./host";
