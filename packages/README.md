@@ -11,6 +11,21 @@ part of your own pages to change it, using your components and your data. Three 
 
 Requirements: React 18 or 19, a Cloudflare Worker (with `nodejs_compat`), and an Anthropic API key.
 
+## Install into your project
+
+From your project's folder (where package.json is), run
+[`scripts/setup-intent-ui.sh`](../scripts/setup-intent-ui.sh) from this repo. It clones or updates
+this repo next to your project, builds the packages (installing Bun if needed), packs them into
+`vendor/intent-ui/`, and installs them with your package manager. Copy it into your project to
+re-run it whenever the SDK changes:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Brayden/intent-ui/sdk-scaffold/scripts/setup-intent-ui.sh -o scripts/setup-intent-ui.sh
+chmod +x scripts/setup-intent-ui.sh && ./scripts/setup-intent-ui.sh
+```
+
+Then wire it up:
+
 ## 1. Server: mount the handler in your Worker
 
 ```ts
