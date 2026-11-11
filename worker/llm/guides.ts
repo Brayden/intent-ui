@@ -1,5 +1,6 @@
 import { listUnavailableTools } from "../connections/registry";
 import type { ToolInfo } from "../../shared/api";
+import { DESCRIBE_TOOL, listsCompactly, shortDescription } from "./toolCatalog";
 
 /* Prompt sections shared by every generation endpoint, so they can't drift apart. */
 
@@ -102,18 +103,28 @@ A page is a freeform layout tree that blocks mount into:
 - Mind the space: check where a slot sits (its parent's grid tracks, e.g. a 16rem side rail) before arranging blocks in it. If the request needs more width (e.g. several cards in one row), move or restructure the slot rather than squeezing it.
 - Custom grids: "grid": { "columns"?: { "base"?, "sm"?, "md"?, "lg"?, "xl"? }, "rows"?: {…} } with track lists like "minmax(0, 2fr) 18rem" (fr, px, rem, %, minmax, repeat, auto, min/max/fit-content).`;
 
-/** "Available tools" section. */
+/**
+ * "Available tools" section. With `withSchemas`, small catalogs include every input schema; large
+ * ones list tools compactly and the model fetches schemas with describe_tools (see toolCatalog.ts;
+ * the tool loop adds it when given the catalog).
+ */
 export function toolsSection(tools: ToolInfo[], withSchemas: boolean): string {
+  const compact = withSchemas && listsCompactly(tools);
   const list = tools
     .map((t) => {
-      const line = `- ${t.connection} / ${t.name} (${t.readOnly ? "read-only" : "WRITE"}): ${t.description}`;
+      const access = t.readOnly ? "read-only" : "WRITE";
+      if (compact) return `- ${t.connection} / ${t.name} (${access}): ${shortDescription(t.description)}`;
+      const line = `- ${t.connection} / ${t.name} (${access}): ${t.description}`;
       return withSchemas ? `${line}\n  input: ${JSON.stringify(t.inputSchema)}` : line;
     })
     .join("\n");
+  const howTo = compact
+    ? `\nInput schemas aren't listed here. Before using a tool in a source, an inspect_tool call or an action, call ${DESCRIBE_TOOL.name} for it (several at once is fine) and follow its schema exactly.\n`
+    : "";
   const off = listUnavailableTools();
   const offSection =
     off.length > 0
       ? `\n\nOff (not usable; if the request needs one, decline and say how to turn it on: a write tool can be switched on in Connections on the home page, and to use it for page data, reconnect that service with "Read only" access): ${off.map((tool) => `${tool.connectionName} / ${tool.name}`).join(", ")}`
       : "";
-  return `# Available tools\n${list || "(none)"}${offSection}`;
+  return `# Available tools${howTo}\n${list || "(none)"}${offSection}`;
 }

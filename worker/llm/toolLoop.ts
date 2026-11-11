@@ -9,9 +9,13 @@ import {
   type ToolResultBlock,
   type ToolUseBlock,
 } from "./anthropic";
+import type { ToolInfo } from "../../shared/api";
+import { DESCRIBE_TOOL, describeTools, listsCompactly } from "./toolCatalog";
 
 const MAX_ATTEMPTS = 3;
 const MAX_OBSERVATIONS = 8;
+/** describe_tools calls allowed per loop (each can describe several tools). */
+const MAX_DESCRIBES = 4;
 
 /** What a tool handler decided: done (with a value) or issues to send back for repair. */
 export type LoopOutcome<T> = { ok: true; value: T } | { ok: false; issues: string[] };
@@ -32,9 +36,14 @@ type ToolLoopOptions<T> = {
    * Observations don't count as attempts, but are capped.
    */
   observe?: (call: ToolUseBlock) => Promise<string | null>;
+  /**
+   * The tools the prompt lists. When it's large enough to be listed without schemas (see
+   * toolsSection), the loop offers describe_tools and answers it from this catalog.
+   */
+  toolCatalog?: ToolInfo[];
 };
 
-const MAX_TURNS = MAX_ATTEMPTS + MAX_OBSERVATIONS;
+const MAX_TURNS = MAX_ATTEMPTS + MAX_OBSERVATIONS + MAX_DESCRIBES;
 
 /**
  * Asks the model to answer with a final tool call, validates it, and feeds issues back until
@@ -49,12 +58,15 @@ export async function runToolLoop<T>(env: Env, options: ToolLoopOptions<T>): Pro
   let lastIssues: string[] = [];
   let attempts = 0;
   let observations = 0;
+  let describes = 0;
+  const catalog = options.toolCatalog && listsCompactly(options.toolCatalog) ? options.toolCatalog : null;
+  const tools = catalog ? [DESCRIBE_TOOL, ...options.tools] : options.tools;
 
   for (let turn = 0; turn < MAX_TURNS && attempts < MAX_ATTEMPTS; turn++) {
     const response = await createMessage(env, {
       system: options.system,
       messages,
-      tools: [...options.tools, ...(options.serverTools ?? [])],
+      tools: [...tools, ...(options.serverTools ?? [])],
       tool_choice: { type: "auto" },
     });
     messages.push({ role: "assistant", content: response.content });
@@ -75,6 +87,13 @@ export async function runToolLoop<T>(env: Env, options: ToolLoopOptions<T>): Pro
     const results: ToolResultBlock[] = [];
     let handledFinal = false;
     for (const call of calls) {
+      const described = catalog ? describeTools(catalog, call) : null;
+      if (described != null) {
+        describes++;
+        const over = describes > MAX_DESCRIBES;
+        results.push({ type: "tool_result", tool_use_id: call.id, content: over ? "Describe limit reached. Use the schemas you have." : described, is_error: over });
+        continue;
+      }
       const observation = await options.observe?.(call);
       if (observation != null) {
         observations++;

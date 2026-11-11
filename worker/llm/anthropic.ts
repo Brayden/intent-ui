@@ -38,6 +38,32 @@ export type MessageRequest = {
 
 export type MessageResponse = { content: ContentBlock[]; stop_reason: string; usage: Record<string, number> };
 
+const CACHE = { type: "ephemeral" } as const;
+
+/** A copy of `message` with a cache breakpoint on its last content block. */
+function withBreakpoint(message: Message): Message {
+  const content = typeof message.content === "string" ? [{ type: "text", text: message.content } as TextBlock] : message.content;
+  if (content.length === 0) return message;
+  const last = content[content.length - 1]!;
+  return { ...message, content: [...content.slice(0, -1), { ...last, cache_control: CACHE } as ContentBlock] };
+}
+
+/**
+ * Prompt caching (cached input costs about a tenth of fresh input, and is faster). The prefix is
+ * tools → system → messages, so three breakpoints cover a whole tool loop:
+ * - the system prompt: tools, guides and catalog, identical across turns and most requests;
+ * - the message before the newest model turn: exactly where the previous request's cache ended,
+ *   so it's read back even when that turn added many blocks (e.g. web search results);
+ * - the newest message: written now, read by the next turn.
+ * Breakpoints go on copies; the caller's history is never changed.
+ */
+function cacheable(request: MessageRequest): Omit<MessageRequest, "system"> & { system: Array<TextBlock & { cache_control: typeof CACHE }> } {
+  const messages = request.messages.map((message, index, all) =>
+    index === all.length - 1 || (all.length >= 3 && index === all.length - 3) ? withBreakpoint(message) : message,
+  );
+  return { ...request, system: [{ type: "text", text: request.system, cache_control: CACHE }], messages };
+}
+
 /** Sends one Messages API request. Throws an HttpError the client can display on failure. */
 export async function createMessage(env: Env, request: MessageRequest): Promise<MessageResponse> {
   if (!env.ANTHROPIC_API_KEY) {
@@ -50,11 +76,24 @@ export async function createMessage(env: Env, request: MessageRequest): Promise<
       "x-api-key": env.ANTHROPIC_API_KEY,
       "anthropic-version": API_VERSION,
     },
-    body: JSON.stringify({ model: env.ANTHROPIC_MODEL ?? DEFAULT_MODEL, max_tokens: 8192, ...request }),
+    body: JSON.stringify({ model: env.ANTHROPIC_MODEL ?? DEFAULT_MODEL, max_tokens: 8192, ...cacheable(request) }),
   });
   if (!response.ok) {
     const detail = await response.text();
     throw new HttpError(502, `Model request failed (${response.status})`, [detail.slice(0, 500)]);
   }
-  return response.json();
+  const body = (await response.json()) as MessageResponse;
+  logUsage(body.usage);
+  return body;
+}
+
+/** One line per request, to see what generation costs and whether the cache is hit. */
+function logUsage(usage: Record<string, number> | undefined): void {
+  if (!usage) return;
+  const fresh = usage.input_tokens ?? 0;
+  const written = usage.cache_creation_input_tokens ?? 0;
+  const read = usage.cache_read_input_tokens ?? 0;
+  const total = fresh + written + read;
+  const hit = total > 0 ? Math.round((read / total) * 100) : 0;
+  console.log(`[model] input ${total} (cache read ${read}, written ${written}, fresh ${fresh}; ${hit}% cached) · output ${usage.output_tokens ?? 0}`);
 }

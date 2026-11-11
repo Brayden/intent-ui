@@ -74,6 +74,7 @@ export async function generatePage(
     serverTools: [WEB_SEARCH_TOOL],
     onResponse: (content) => log.collect(content),
     observe: observer(log),
+    toolCatalog: tools,
     handle: (call) => (call.name === DECLINE_TOOL.name ? decline(call.input) : handle(call.input)),
   });
   return value.status === "applied" ? { ...value, attempts } : value;

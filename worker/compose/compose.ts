@@ -29,6 +29,7 @@ export async function compose(
     serverTools: [WEB_SEARCH_TOOL],
     onResponse: (content) => log.collect(content),
     observe: observer(log),
+    toolCatalog: tools,
     handle: (call) =>
       call.name === DECLINE_TOOL.name ? handleDecline(call.input) : handleCompose(call.input, workspace, pageId, tools, styles, log, route),
   });

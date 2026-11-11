@@ -25,13 +25,16 @@ export async function amend(env: Env, request: AmendRequest, tools: ToolInfo[], 
   const workspace = parsed?.data;
   const log = new ResearchLog();
 
+  const canChangeData = Boolean(workspace) && request.kind === "block";
   const { value, attempts } = await runToolLoop<AmendResponse>(env, {
-    system: amendSystemPrompt(tools, Boolean(workspace) && request.kind === "block"),
+    system: amendSystemPrompt(tools, canChangeData),
     prompt: amendUserPrompt(request, workspace),
     tools: [INSPECT_TOOL, APPLY_TOOL, DECLINE_TOOL],
     serverTools: [WEB_SEARCH_TOOL],
     onResponse: (content) => log.collect(content),
     observe: observer(log),
+    // Schemas are only listed when the edit can change data (see amendSystemPrompt).
+    toolCatalog: canChangeData ? tools : undefined,
     handle: (call) =>
       call.name === DECLINE_TOOL.name ? handleDecline(call.input) : handleApply(call.input, request, { tools, styles, workspace, log }),
   });

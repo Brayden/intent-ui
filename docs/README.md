@@ -22,6 +22,7 @@ The documentation layer for Intent UI. Start with the founding RFC.
 | [ADR 0013: Interactive data: inputs drive the URL](decisions/0013-interactive-data-inputs-drive-the-url.md) | `TextInput` bound to `/ui` or `/route`; `set /route/x`; optional params; source `when`; partial reloads of route-dependent blocks |
 | [ADR 0014: Data connections: remote MCP behind a thin gatekeeper](decisions/0014-data-connections-mcp-with-a-gatekeeper.md) | Remote MCP (Streamable HTTP); OAuth (discovery, DCR, PKCE, refresh) or token; per-user Durable Object; read/write policy, writes off by default, destructive confirm, activity log; real GitHub/Linear replace demo data |
 | [ADR 0015: Connection access levels](decisions/0015-connection-access-levels.md) | Read only (default: read scopes only; every tool, even `execute`, is a read) or Read & write; per-tool "treat as read-only" |
+| [ADR 0016: Prompt caching and compact tool catalogs](decisions/0016-prompt-caching-and-compact-tool-catalogs.md) | Cache system prompt + loop history; stable content only in system prompts; large tool catalogs listed one line each with `describe_tools` for schemas; usage logged |
 
 ## Conventions
 

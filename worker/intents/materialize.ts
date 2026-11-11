@@ -20,8 +20,10 @@ export async function materialize(
 ): Promise<MaterializeResponse> {
   const canReuse = request.candidates.length > 0;
   const { value, attempts } = await runToolLoop<Resolved>(env, {
-    system: materializeSystemPrompt(tools, request.candidates),
+    system: materializeSystemPrompt(tools),
+    // Candidates vary per request, so they go in the user message to keep the system prompt cacheable.
     prompt: materializeUserPrompt(request),
+    toolCatalog: tools,
     tools: canReuse ? [REUSE_TOOL, EMIT_TOOL] : [EMIT_TOOL],
     handle: async (call) => {
       const outcome =
