@@ -1,5 +1,6 @@
 import { ComposeRequestSchema } from "../../shared/api";
 import { compose } from "../compose/compose";
+import { composeStream } from "../compose/stream";
 import { listTools } from "../connections/registry";
 import type { Env } from "../env";
 import { HttpError, readJson } from "../lib/http";
@@ -16,5 +17,9 @@ export async function handleCompose(request: Request, env: Env, { id = "" }: Par
   const checked = await checkWorkspace(body.spec, stored.templates, styles);
   if (!("spec" in checked)) throw new HttpError(400, "Invalid workspace", checked.issues);
   const route = pickRoute(checked.spec.pages[body.pageId], body.route);
+  // Progressive compose (ADR 0017): draft events as the model writes, then the same result.
+  if (request.headers.get("accept")?.includes("text/event-stream")) {
+    return composeStream(env, body.prompt, checked.spec, body.pageId, listTools(), styles, route);
+  }
   return Response.json(await compose(env, body.prompt, checked.spec, body.pageId, listTools(), styles, route));
 }

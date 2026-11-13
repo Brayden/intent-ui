@@ -28,6 +28,8 @@ export function useWorkspaceData(
   flush: () => Promise<unknown>,
   /** Blocks that read the route: the only ones reloaded when just the route changes (ADR 0013). */
   routeBlocks: string[],
+  /** A page still being generated isn't saved yet: don't load it (its draft brings its data). */
+  skip = false,
 ) {
   const toasts = useToasts();
   const [views, setViews] = useState(snapshots);
@@ -59,8 +61,9 @@ export function useWorkspaceData(
     loaded.current = current.current;
     const samePage = loadedPage.current === pageId;
     loadedPage.current = pageId;
+    if (skip) return;
     void load(samePage);
-  }, [load, pageId]);
+  }, [load, pageId, skip]);
 
   const merge = useCallback((fresh: Record<string, BlockView>) => setViews((existing) => ({ ...existing, ...fresh })), []);
   return { views, refresh, merge };

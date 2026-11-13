@@ -19,6 +19,20 @@ export type ToolCaller = (connection: string, tool: string, args: Record<string,
 const callRegisteredTool: ToolCaller = (connectionId, tool, args) => findTool(connectionId, tool).connection.call(tool, args);
 
 /**
+ * A tool caller that makes each distinct call once (same connection, tool and args), e.g. so a
+ * dry run reuses data fetched while the model was still writing (ADR 0017).
+ */
+export function memoizedToolCaller(call: ToolCaller = callRegisteredTool): ToolCaller {
+  const calls = new Map<string, Promise<unknown>>();
+  return (connection, tool, args) => {
+    const key = JSON.stringify([connection, tool, args]);
+    let result = calls.get(key);
+    if (!result) calls.set(key, (result = call(connection, tool, args)));
+    return result;
+  };
+}
+
+/**
  * How one page load evaluates sources. `asOf` (epoch ms) is the load's clock: `$now()` in every
  * expression returns it (RFC 0003 §5.6). `callTool` lets conformance runs supply recorded results.
  */

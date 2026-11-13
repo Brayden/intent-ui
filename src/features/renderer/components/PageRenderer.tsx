@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { blockMeta, type Block, type BlockView, type LayoutNode, type Workspace } from "../../../../shared/spec";
 import { useLayoutTargetHandler } from "../targeting";
-import { BlockProvider, useRouteValues } from "../context";
+import { BlockProvider, useIsDraft, useRouteValues } from "../context";
+import { DraftPlaceholder } from "./DraftPlaceholder";
 import { blockScope } from "../lib/blockScope";
 import { BlockFrame } from "./BlockFrame";
 import { LayoutNodeElement } from "./LayoutNodeElement";
@@ -36,6 +37,7 @@ function PageBlock({ block, view, workspace }: { block: Block; view: BlockView; 
 /** Renders a page: its freeform layout, with blocks mounted into slots. */
 export function PageRenderer({ workspace, pageId, views }: PageRendererProps) {
   const page = workspace.pages[pageId];
+  const draft = useIsDraft();
   if (!page) return <NodeError id={pageId} message="Unknown page" />;
 
   const blocksIn = (slotId: string) =>
@@ -45,7 +47,7 @@ export function PageRenderer({ workspace, pageId, views }: PageRendererProps) {
 
   const renderLayoutNode = (id: string) => {
     const node = page.layout.nodes[id];
-    if (!node) return <NodeError key={id} id={id} message="Unknown layout node" />;
+    if (!node) return draft ? <DraftPlaceholder key={id} id={id} /> : <NodeError key={id} id={id} message="Unknown layout node" />;
     return (
       <LayoutNodeElement key={id} pageId={pageId} id={id} node={node}>
         {node.kind === "html"

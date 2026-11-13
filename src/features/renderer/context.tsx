@@ -21,6 +21,19 @@ export function useRouteValues(): RouteValues {
   return useContext(RouteContext);
 }
 const BlockContext = createContext<BlockRuntime | null>(null);
+const DraftContext = createContext(false);
+
+/**
+ * Marks a page that's still being written (ADR 0017): nodes that haven't arrived, or can't
+ * render yet, show placeholders instead of errors.
+ */
+export function DraftProvider({ draft, children }: { draft: boolean; children: ReactNode }) {
+  return <DraftContext.Provider value={draft}>{children}</DraftContext.Provider>;
+}
+
+export function useIsDraft(): boolean {
+  return useContext(DraftContext);
+}
 
 export function DispatchProvider({ dispatch, children }: { dispatch: ActionDispatcher; children: ReactNode }) {
   return <DispatchContext.Provider value={dispatch}>{children}</DispatchContext.Provider>;
@@ -52,9 +65,11 @@ export function useBlock(): BlockRuntime {
 /** Status of the inputs a field requires: the worst status wins; incomplete if any is. */
 export function useInputStatus(requires: string[] = []) {
   const { view } = useBlock();
+  const draft = useIsDraft();
   const inputs = requires.map((alias) => view.inputs[alias]).filter((input) => input !== undefined);
   return {
-    loading: inputs.some((input) => input.status === "loading"),
+    // A block still being written has no data yet: it's loading, not empty (ADR 0017).
+    loading: inputs.some((input) => input.status === "loading") || (draft && view.data === null),
     failed: inputs.some((input) => input.status === "error" || input.status === "auth_required"),
     complete: inputs.every((input) => input.complete !== false),
   };

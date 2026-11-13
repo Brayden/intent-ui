@@ -5,6 +5,7 @@ import { applyComposeChanges, ComposeChangesSchema, describeIssues, dryRunRoute,
 import { findTool } from "../connections/registry";
 import { sourceIssues } from "../data/checkSources";
 import { computePage } from "../data/views";
+import type { RunOptions } from "../data/sources";
 import type { ToolDefinition, ToolUseBlock } from "../llm/anthropic";
 import type { LoopOutcome } from "../llm/toolLoop";
 import { validateActions } from "../intents/validateActions";
@@ -78,6 +79,7 @@ export async function handleCompose(
   styles: StyleEngine,
   log: ResearchLog,
   route: RouteValues = {},
+  runOptions: RunOptions = {},
 ): Promise<LoopOutcome<ComposeResponse>> {
   const parsed = ComposeInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, issues: describeIssues(parsed.error.issues) };
@@ -113,7 +115,7 @@ export async function handleCompose(
     const unknown = source.params.filter((name) => !page?.params[name]);
     if (unknown.length > 0) return { ok: false, issues: [`source "${source.id}": params ${unknown.join(", ")} aren't route params of this page; add them with "pageParams"`] };
   }
-  const { views, results } = await computePage(next, pageId, dry.values);
+  const { views, results } = await computePage(next, pageId, dry.values, runOptions);
   const dataIssues: string[] = [];
   for (const [id, result] of Object.entries(results)) {
     if (result.status === "error") dataIssues.push(`source "${id}" failed: ${result.error}`);

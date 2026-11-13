@@ -2,7 +2,10 @@ import type { Env } from "../env";
 import { HttpError } from "../lib/http";
 import {
   createMessage,
+  INVALID_JSON,
+  streamMessage,
   type ContentBlock,
+  type ToolInputDelta,
   type Message,
   type ServerToolDefinition,
   type ToolDefinition,
@@ -41,7 +44,21 @@ type ToolLoopOptions<T> = {
    * toolsSection), the loop offers describe_tools and answers it from this catalog.
    */
   toolCatalog?: ToolInfo[];
+  /**
+   * Streams responses and reports each final-tool call's input text as it grows (not
+   * observations or describe_tools), with the attempt it belongs to. A repair after failed
+   * validation starts a new attempt, so callers should start over when it changes.
+   */
+  onToolInput?: (delta: ToolInputDelta & { attempt: number }) => void;
+  /** What the loop is doing, for progress messages. */
+  onStatus?: (status: LoopStatus) => void;
 };
+
+export type LoopStatus =
+  | { kind: "inspecting"; detail: string }
+  | { kind: "searching" }
+  | { kind: "checking" }
+  | { kind: "repairing"; attempt: number; issues: string[] };
 
 const MAX_TURNS = MAX_ATTEMPTS + MAX_OBSERVATIONS + MAX_DESCRIBES;
 
@@ -73,16 +90,29 @@ export async function runToolLoop<T>(env: Env, options: ToolLoopOptions<T>): Pro
   const tools = catalog ? [DESCRIBE_TOOL, ...options.tools] : options.tools;
 
   for (let turn = 0; turn < MAX_TURNS && attempts < MAX_ATTEMPTS; turn++) {
-    const response = await createMessage(env, {
+    // When streaming, final tools stream their input as it's written (fine-grained streaming).
+    const streamed = options.onToolInput ? tools.map((tool) => (options.tools.includes(tool) ? { ...tool, eager_input_streaming: true } : tool)) : tools;
+    const request = {
       system: options.system,
       messages,
-      tools: [...tools, ...(options.serverTools ?? [])],
-      tool_choice: { type: "auto" },
-    });
+      tools: [...streamed, ...(options.serverTools ?? [])],
+      tool_choice: { type: "auto" as const },
+    };
+    const finalNames = new Set(options.tools.map((tool) => tool.name));
+    const onToolInput = options.onToolInput;
+    const response = onToolInput
+      ? await streamMessage(env, request, (delta) => {
+          if (finalNames.has(delta.name)) onToolInput({ ...delta, attempt: attempts + 1 });
+        })
+      : await createMessage(env, request);
     messages.push({ role: "assistant", content: response.content });
     options.onResponse?.(response.content);
     // A long server-tool turn (e.g. several searches) pauses; sending it back continues it.
-    if (response.stop_reason === "pause_turn") continue;
+    if (response.stop_reason === "pause_turn") {
+      options.onStatus?.({ kind: "searching" });
+      continue;
+    }
+    if (response.content.some((block) => block.type === "server_tool_use")) options.onStatus?.({ kind: "searching" });
 
     const calls = response.content.filter((block): block is ToolUseBlock => block.type === "tool_use");
     if (calls.length === 0) {
@@ -104,6 +134,10 @@ export async function runToolLoop<T>(env: Env, options: ToolLoopOptions<T>): Pro
         results.push({ type: "tool_result", tool_use_id: call.id, content: over ? "Describe limit reached. Use the schemas you have." : described, is_error: over });
         continue;
       }
+      if (options.observe && !options.tools.some((tool) => tool.name === call.name)) {
+        const input = call.input as { connection?: unknown; tool?: unknown };
+        options.onStatus?.({ kind: "inspecting", detail: [input?.connection, input?.tool].filter((part) => typeof part === "string").join(" / ") || call.name });
+      }
       const observation = await options.observe?.(call);
       if (observation != null) {
         observations++;
@@ -118,9 +152,18 @@ export async function runToolLoop<T>(env: Env, options: ToolLoopOptions<T>): Pro
       handledFinal = true;
       attempts++;
       const known = options.tools.some((tool) => tool.name === call.name);
+      const input = call.input as Record<string, unknown> | null;
+      if (known && input && typeof input[INVALID_JSON] === "string") {
+        lastIssues = ["The tool input was not valid JSON"];
+        options.onStatus?.({ kind: "repairing", attempt: attempts + 1, issues: lastIssues });
+        results.push({ type: "tool_result", tool_use_id: call.id, content: `Your input was not valid JSON. Call the tool again with valid JSON.`, is_error: true });
+        continue;
+      }
+      if (known) options.onStatus?.({ kind: "checking" });
       const outcome: LoopOutcome<T> = known ? await options.handle(call) : { ok: false, issues: [`Unknown tool "${call.name}"`] };
       if (outcome.ok) return { value: outcome.value, attempts };
       lastIssues = outcome.issues;
+      options.onStatus?.({ kind: "repairing", attempt: attempts + 1, issues: outcome.issues });
       results.push({
         type: "tool_result",
         tool_use_id: call.id,

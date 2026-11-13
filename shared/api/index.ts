@@ -6,3 +6,4 @@ export * from "./research";
 export * from "./connections";
 export * from "./document";
 export * from "./host";
+export * from "./composeStream";

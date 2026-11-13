@@ -1,12 +1,22 @@
 import type { ComposeResponse, ToolInfo } from "../../shared/api";
 import type { RouteValues, Workspace } from "../../shared/spec";
 import type { Env } from "../env";
-import { runToolLoop } from "../llm/toolLoop";
+import { runToolLoop, type LoopStatus } from "../llm/toolLoop";
+import type { ToolInputDelta } from "../llm/anthropic";
+import type { RunOptions } from "../data/sources";
 import type { StyleEngine } from "../styles/engine";
 import { composeSystemPrompt, composeUserPrompt } from "./prompt";
 import { WEB_SEARCH_TOOL } from "../llm/anthropic";
 import { ResearchLog } from "../research/log";
 import { COMPOSE_TOOL, DECLINE_TOOL, handleCompose, handleDecline, INSPECT_TOOL, observer } from "./tools";
+
+/** Optional hooks for progressive compose (see stream.ts). */
+export type ComposeProgress = {
+  onToolInput?: (delta: ToolInputDelta & { attempt: number }) => void;
+  onStatus?: (status: LoopStatus) => void;
+  /** Used by the dry run, e.g. to reuse data fetched while the model was still writing. */
+  runOptions?: RunOptions;
+};
 
 /**
  * Builds or changes a page from a chat prompt (ADR 0008): the model may inspect read-only tools,
@@ -20,6 +30,7 @@ export async function compose(
   tools: ToolInfo[],
   styles: StyleEngine,
   route: RouteValues = {},
+  progress: ComposeProgress = {},
 ): Promise<ComposeResponse> {
   const log = new ResearchLog();
   const { value, attempts } = await runToolLoop<ComposeResponse>(env, {
@@ -30,8 +41,10 @@ export async function compose(
     onResponse: (content) => log.collect(content),
     observe: observer(log),
     toolCatalog: tools,
+    onToolInput: progress.onToolInput,
+    onStatus: progress.onStatus,
     handle: (call) =>
-      call.name === DECLINE_TOOL.name ? handleDecline(call.input) : handleCompose(call.input, workspace, pageId, tools, styles, log, route),
+      call.name === DECLINE_TOOL.name ? handleDecline(call.input) : handleCompose(call.input, workspace, pageId, tools, styles, log, route, progress.runOptions),
   });
   return value.status === "applied" ? { ...value, attempts } : value;
 }

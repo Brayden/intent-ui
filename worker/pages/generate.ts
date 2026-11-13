@@ -4,16 +4,25 @@ import { blankWorkspace, ComposeChangesSchema, describeIssues, PageParamSchema, 
 import type { Env } from "../env";
 import { WEB_SEARCH_TOOL, type ToolDefinition } from "../llm/anthropic";
 import { runToolLoop, type LoopOutcome } from "../llm/toolLoop";
+import type { ComposeProgress } from "../compose/compose";
 import { DECLINE_TOOL, handleCompose, handleDecline, INSPECT_TOOL, observer } from "../compose/tools";
 import { ResearchLog } from "../research/log";
 import type { StyleEngine } from "../styles/engine";
 import { pageSystemPrompt, pageUserPrompt } from "./prompt";
 
-const CreatePageInputSchema = ComposeChangesSchema.extend({
-  summary: z.string().min(1).describe("One or two sentences for the user: what the page shows."),
-  title: z.string().min(1).max(120),
-  params: z.record(z.string().regex(/^[a-zA-Z][a-zA-Z0-9_]*$/), PageParamSchema.extend({ from: z.string() })).default({}),
-});
+export const CreatePageParamSchema = PageParamSchema.extend({ from: z.string() });
+
+/**
+ * Title and params come first: the model writes fields in schema order, so a streaming client can
+ * open the page at its final URL before the blocks are written (ADR 0017).
+ */
+const CreatePageInputSchema = z
+  .object({
+    title: z.string().min(1).max(120),
+    params: z.record(z.string().regex(/^[a-zA-Z][a-zA-Z0-9_]*$/), CreatePageParamSchema).default({}),
+  })
+  .extend(ComposeChangesSchema.shape)
+  .extend({ summary: z.string().min(1).describe("One or two sentences for the user: what the page shows.") });
 
 export const CREATE_PAGE_TOOL: ToolDefinition = {
   name: "create_page",
@@ -22,7 +31,7 @@ export const CREATE_PAGE_TOOL: ToolDefinition = {
 };
 
 /** A free page id derived from the intent id, e.g. "artist-profile", "artist-profile-2". */
-function pageIdFor(intentId: string, workspace: Workspace): string {
+export function pageIdFor(intentId: string, workspace: Workspace): string {
   const base = intentId.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "page";
   let id = base;
   for (let n = 2; workspace.pages[id]; n++) id = `${base}-${n}`;
@@ -40,6 +49,7 @@ export async function generatePage(
   workspace: Workspace,
   tools: ToolInfo[],
   styles: StyleEngine,
+  progress: ComposeProgress = {},
 ): Promise<GeneratePageResponse> {
   const log = new ResearchLog();
   const pageId = pageIdFor(request.intent.id, workspace);
@@ -55,7 +65,7 @@ export async function generatePage(
       return { ok: false, issues: route.missing.map((name) => `param "${name}": the clicked item has no value for "${params[name]?.from}"`) };
     }
     const withPage = { ...workspace, pages: { ...workspace.pages, [pageId]: page } };
-    const result = await handleCompose({ summary, ...changes }, withPage, pageId, tools, styles, log, route.values);
+    const result = await handleCompose({ summary, ...changes }, withPage, pageId, tools, styles, log, route.values, progress.runOptions);
     if (!result.ok) return result;
     if (result.value.status !== "applied") return { ok: false, issues: ["create_page must create the page"] };
     const { views, css } = result.value;
@@ -75,6 +85,8 @@ export async function generatePage(
     onResponse: (content) => log.collect(content),
     observe: observer(log),
     toolCatalog: tools,
+    onToolInput: progress.onToolInput,
+    onStatus: progress.onStatus,
     handle: (call) => (call.name === DECLINE_TOOL.name ? decline(call.input) : handle(call.input)),
   });
   return value.status === "applied" ? { ...value, attempts } : value;
